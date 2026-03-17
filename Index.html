@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BoastIQ Player Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;500;700&display=swap');
+
+  :root {
+    --bg: #0c0c0f;
+    --surface: #16161b;
+    --surface-2: #1e1e25;
+    --border: #2a2a35;
+    --text: #e0dfe6;
+    --text-dim: #7a7888;
+    --accent: #4af0c0;
+    --accent-dim: #2a8068;
+    --red: #f05050;
+    --blue: #5080f0;
+    --yellow: #f0c040;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Outfit', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .header {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .header h1 span { color: var(--accent); }
+  .header .badge {
+    font-family: var(--mono); font-size: 11px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 3px 8px; border-radius: 4px; color: var(--text-dim);
+  }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 32px; }
+
+  .step { display: none; animation: fadeIn 0.3s ease; }
+  .step.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-label {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--accent); margin-bottom: 8px;
+  }
+  .step-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
+  .step-desc { color: var(--text-dim); font-size: 15px; margin-bottom: 28px; line-height: 1.5; }
+
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 12px; padding: 60px 40px;
+    text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface);
+  }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: var(--surface-2); }
+  .upload-zone .icon { font-size: 48px; margin-bottom: 16px; }
+  .upload-zone p { color: var(--text-dim); font-size: 14px; margin-top: 8px; }
+  .upload-zone input { display: none; }
+
+  .progress-bar-wrap { margin-top: 20px; display: none; }
+  .progress-bar-bg { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.5s; width: 0%; }
+  .progress-text { font-family: var(--mono); font-size: 12px; color: var(--text-dim); margin-top: 8px; text-align: right; }
+
+  .frame-container {
+    position: relative; display: inline-block; border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden; cursor: crosshair; max-width: 100%;
+  }
+  .frame-container canvas { display: block; max-width: 100%; height: auto; }
+
+  .points-info { margin-top: 16px; font-family: var(--mono); font-size: 13px; display: flex; gap: 24px; }
+  .point-badge { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); }
+  .point-badge.p1 { border-color: var(--red); color: var(--red); }
+  .point-badge.p2 { border-color: var(--blue); color: var(--blue); }
+  .point-badge.set { opacity: 1; }
+  .point-badge.unset { opacity: 0.4; }
+
+  .btn {
+    font-family: var(--sans); font-weight: 600; font-size: 14px; padding: 12px 28px;
+    border: none; border-radius: 8px; cursor: pointer; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+  .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover:not(:disabled) { border-color: var(--accent); }
+  .btn-row { margin-top: 20px; display: flex; gap: 12px; align-items: center; }
+
+  .video-preview {
+    width: 100%; border-radius: 8px; border: 1px solid var(--border);
+    background: #000; margin-bottom: 24px;
+  }
+
+  .overall-progress { margin-bottom: 24px; }
+  .overall-progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .overall-pct { font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--accent); }
+  .overall-eta { font-family: var(--mono); font-size: 13px; color: var(--text-dim); }
+  .overall-bar-bg { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+  .overall-bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+    border-radius: 5px; transition: width 0.8s ease; width: 0%;
+  }
+  .overall-status { font-family: var(--mono); font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+
+  .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-top: 16px; }
+  .result-card h3 { font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .result-card a { color: var(--accent); text-decoration: none; font-family: var(--mono); font-size: 13px; }
+  .result-card a:hover { text-decoration: underline; }
+
+  .reprompt-banner {
+    background: var(--surface-2); border: 1px solid var(--yellow); border-radius: 8px;
+    padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+  }
+  .reprompt-banner .icon { font-size: 24px; }
+  .reprompt-banner p { font-size: 14px; line-height: 1.4; }
+
+  .video-meta {
+    font-family: var(--mono); font-size: 12px; color: var(--text-dim);
+    margin-bottom: 16px; display: flex; gap: 20px; flex-wrap: wrap;
+  }
+  .video-meta span { background: var(--surface); padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Boast<span>IQ</span> Tracker</h1>
+  <div class="badge">SAM2 · A100-80GB</div>
+</div>
+
+<div class="container">
+
+  <!-- STEP 1: Upload -->
+  <div id="step-upload" class="step active">
+    <div class="step-label">Step 1</div>
+    <div class="step-title">Upload Video</div>
+    <div class="step-desc">Upload your match video (MP4, up to 2 GB).</div>
+    <div class="upload-zone" id="upload-zone">
+      <div class="icon">🎬</div>
+      <div><strong>Drop video here</strong> or click to browse</div>
+      <p>MP4 · up to 2 GB</p>
+      <input type="file" id="file-input" accept="video/mp4,video/*">
+    </div>
+    <div class="progress-bar-wrap" id="upload-progress">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="upload-fill"></div></div>
+      <div class="progress-text" id="upload-text">Uploading...</div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Select Players -->
+  <div id="step-select" class="step">
+    <div class="step-label">Step 2</div>
+    <div class="step-title">Select Players</div>
+    <div class="step-desc">Click on each player. Left-click for Player 1 (red), right-click for Player 2 (blue).</div>
+    <div class="video-meta" id="video-meta"></div>
+    <div class="frame-container" id="frame-container"><canvas id="frame-canvas"></canvas></div>
+    <div class="points-info">
+      <div class="point-badge p1 unset" id="p1-badge">P1: not set</div>
+      <div class="point-badge p2 unset" id="p2-badge">P2: not set</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-start" disabled>Start Tracking</button>
+      <button class="btn btn-secondary" id="btn-reset-pts">Reset Points</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Processing -->
+  <div id="step-process" class="step">
+    <div class="step-label">Processing</div>
+    <div class="step-title">Tracking Players</div>
+    <div class="step-desc">Your video is being analyzed. Watch it while you wait.</div>
+    <video id="preview-video" class="video-preview" controls autoplay muted loop></video>
+    <div class="overall-progress">
+      <div class="overall-progress-header">
+        <div class="overall-pct" id="overall-pct">0%</div>
+        <div class="overall-eta" id="overall-eta"></div>
+      </div>
+      <div class="overall-bar-bg"><div class="overall-bar-fill" id="overall-fill"></div></div>
+      <div class="overall-status" id="overall-status">Starting...</div>
+    </div>
+    <!-- Reprompt UI -->
+    <div id="reprompt-section" style="display:none; margin-top: 24px;">
+      <div class="reprompt-banner">
+        <div class="icon">⚠️</div>
+        <div>
+          <p><strong id="reprompt-msg">Player tracking lost.</strong></p>
+          <p style="color: var(--text-dim); font-size: 13px; margin-top: 4px;">Click on the player positions in the frame below, then click Resume.</p>
+        </div>
+      </div>
+      <div class="frame-container" id="reprompt-frame-container"><canvas id="reprompt-canvas"></canvas></div>
+      <div class="points-info">
+        <div class="point-badge p1 unset" id="rp-p1-badge">P1: not set</div>
+        <div class="point-badge p2 unset" id="rp-p2-badge">P2: not set</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-resume" disabled>Resume Tracking</button>
+        <button class="btn btn-secondary" id="btn-skip">Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Results -->
+  <div id="step-results" class="step">
+    <div class="step-label">Complete</div>
+    <div class="step-title">Results Ready</div>
+    <div class="step-desc" id="results-summary"></div>
+    <div class="result-card" id="result-video" style="display:none;">
+      <h3>🎥 Tracked Video</h3>
+      <a id="result-video-link" href="#" target="_blank">Download video</a>
+    </div>
+    <div class="result-card" id="result-json" style="display:none;">
+      <h3>📊 Tracking JSON</h3>
+      <a id="result-json-link" href="#" target="_blank">Download JSON</a>
+      <pre id="json-preview" style="margin-top: 12px; font-size: 11px; color: var(--text-dim); max-height: 200px; overflow: auto;"></pre>
+    </div>
+    <div class="btn-row" style="margin-top: 24px;">
+      <button class="btn btn-primary" onclick="location.reload()">Track Another Video</button>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getStorage, ref, uploadBytesResumable }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const firebaseConfig = {
+    // ⚠️ REPLACE THESE with your Firebase project config
+    // Firebase Console → Project Settings → General → Your apps → Web app
+    // Project: boastiq-dev | Bucket: boastiq
+    apiKey: "apiKey",
+    authDomain: "boastiq-dev.firebaseapp.com",
+    projectId: "boastiq-dev",
+    storageBucket: "boastiq.firebasestorage.app",
+    messagingSenderId: "000000000000",
+    appId: "ener_appID"
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const fbStorage = getStorage(fbApp);
+
+  // ---- State ----
+  let jobId = null, firebasePath = null, videoMeta = {}, videoKey = null;
+  let player1 = null, player2 = null, ws = null;
+  let frameImage = null, repromptImage = null;
+  let repromptP1 = null, repromptP2 = null;
+  let videoBlobUrl = null;
+
+  // Overall progress
+  let totalSrcFrames = 0, completedSrcFrames = 0;
+  let currentSegSrcStart = 0, currentSegSrcFrames = 0, currentSegPct = 0;
+  let processingStartTime = 0;
+
+  const API = window.location.origin;
+  const $steps = {
+    upload: document.getElementById("step-upload"),
+    select: document.getElementById("step-select"),
+    process: document.getElementById("step-process"),
+    results: document.getElementById("step-results"),
+  };
+
+  function showStep(name) {
+    Object.values($steps).forEach(s => s.classList.remove("active"));
+    $steps[name].classList.add("active");
+  }
+
+  function updateOverallProgress(pct, statusText) {
+    pct = Math.min(100, Math.max(0, pct));
+    document.getElementById("overall-pct").textContent = Math.round(pct) + "%";
+    document.getElementById("overall-fill").style.width = pct + "%";
+    if (statusText) document.getElementById("overall-status").textContent = statusText;
+    const elapsed = (Date.now() - processingStartTime) / 1000;
+    if (pct > 2 && elapsed > 10) {
+      const remaining = (elapsed / (pct / 100)) - elapsed;
+      const m = Math.floor(remaining / 60), s = Math.floor(remaining % 60);
+      document.getElementById("overall-eta").textContent =
+        remaining > 5 ? `~${m}m ${s}s remaining` : "Almost done...";
+    }
+  }
+
+  // ---- Step 1: Upload ----
+  const uploadZone = document.getElementById("upload-zone");
+  const fileInput = document.getElementById("file-input");
+  uploadZone.addEventListener("click", () => fileInput.click());
+  uploadZone.addEventListener("dragover", e => { e.preventDefault(); uploadZone.classList.add("dragover"); });
+  uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("dragover"));
+  uploadZone.addEventListener("drop", e => {
+    e.preventDefault(); uploadZone.classList.remove("dragover");
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener("change", () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
+
+  async function handleFile(file) {
+    if (!file.type.startsWith("video/")) { alert("Please upload a video file."); return; }
+    videoBlobUrl = URL.createObjectURL(file);
+    const jobResp = await fetch(`${API}/api/create-job`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name }),
+    });
+    const jobData = await jobResp.json();
+    jobId = jobData.job_id;
+    videoKey = jobData.video_key;
+
+    firebasePath = `uploaded-videos/${videoKey}.mp4`;
+    const storageRef = ref(fbStorage, firebasePath);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    const progWrap = document.getElementById("upload-progress");
+    const progFill = document.getElementById("upload-fill");
+    const progText = document.getElementById("upload-text");
+    progWrap.style.display = "block";
+
+    uploadTask.on("state_changed",
+      (snap) => {
+        const pct = (snap.bytesTransferred / snap.totalBytes * 100).toFixed(1);
+        progFill.style.width = pct + "%";
+        progText.textContent = `${(snap.bytesTransferred/1e6).toFixed(1)} MB / ${(snap.totalBytes/1e6).toFixed(1)} MB (${pct}%)`;
+      },
+      (err) => { progText.textContent = `Upload failed: ${err.message}`; progText.style.color = "var(--red)"; },
+      async () => {
+        progText.textContent = "Upload complete. Preparing video...";
+        const prepResp = await fetch(`${API}/api/prepare`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ job_id: jobId, gcs_path: firebasePath, video_key: videoKey }),
+        });
+        const meta = await prepResp.json();
+        if (meta.error) { progText.textContent = `Error: ${meta.error}`; return; }
+        videoMeta = meta;
+        setupFrameSelection(meta);
+        showStep("select");
+      }
+    );
+  }
+
+  // ---- Step 2: Player Selection ----
+  function setupFrameSelection(meta) {
+    document.getElementById("video-meta").innerHTML =
+      `<span>${meta.src_width}×${meta.src_height}</span><span>${meta.src_fps} fps</span><span>${meta.duration_sec}s</span>`;
+    const canvas = document.getElementById("frame-canvas");
+    const ctx = canvas.getContext("2d");
+    frameImage = new Image();
+    frameImage.onload = () => { canvas.width = frameImage.width; canvas.height = frameImage.height; drawFrame(ctx, frameImage); };
+    frameImage.src = "data:image/jpeg;base64," + meta.frame_b64;
+    canvas.addEventListener("click", (e) => onFrameClick(e, canvas, ctx, false));
+    canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); onFrameClick(e, canvas, ctx, true); });
+  }
+
+  function onFrameClick(e, canvas, ctx, isRightClick) {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.round((e.clientX - rect.left) * (canvas.width / rect.width));
+    const y = Math.round((e.clientY - rect.top) * (canvas.height / rect.height));
+    if (isRightClick || player1 !== null) { player2 = [x, y]; } else { player1 = [x, y]; }
+    drawFrame(ctx, frameImage);
+    updatePointBadges();
+  }
+
+  function drawFrame(ctx, img) {
+    ctx.drawImage(img, 0, 0);
+    if (player1) drawPoint(ctx, player1, "#f05050", "P1");
+    if (player2) drawPoint(ctx, player2, "#5080f0", "P2");
+  }
+
+  function drawPoint(ctx, pt, color, label) {
+    ctx.beginPath(); ctx.arc(pt[0], pt[1], 12, 0, Math.PI * 2);
+    ctx.fillStyle = color; ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.font = "bold 14px Outfit";
+    ctx.fillText(label, pt[0] + 16, pt[1] + 5);
+  }
+
+  function updatePointBadges() {
+    const b1 = document.getElementById("p1-badge"), b2 = document.getElementById("p2-badge");
+    b1.textContent = player1 ? `P1: (${player1[0]}, ${player1[1]})` : "P1: not set";
+    b1.className = `point-badge p1 ${player1 ? "set" : "unset"}`;
+    b2.textContent = player2 ? `P2: (${player2[0]}, ${player2[1]})` : "P2: not set";
+    b2.className = `point-badge p2 ${player2 ? "set" : "unset"}`;
+    document.getElementById("btn-start").disabled = !(player1 && player2);
+  }
+
+  document.getElementById("btn-reset-pts").addEventListener("click", () => {
+    player1 = null; player2 = null;
+    drawFrame(document.getElementById("frame-canvas").getContext("2d"), frameImage);
+    updatePointBadges();
+  });
+  document.getElementById("btn-start").addEventListener("click", startProcessing);
+
+  // ---- Step 3: Processing ----
+  function startProcessing() {
+    showStep("process");
+    processingStartTime = Date.now();
+    totalSrcFrames = videoMeta.total_frames;
+    completedSrcFrames = 0;
+    document.getElementById("preview-video").src = videoBlobUrl;
+    updateOverallProgress(0, "Connecting...");
+
+    const wsUrl = `${API.replace("http", "ws")}/ws/${jobId}`;
+    ws = new WebSocket(wsUrl);
+    ws.onopen = () => {
+      updateOverallProgress(0, "Connected. Starting tracking...");
+      ws.send(JSON.stringify({
+        type: "start_processing", player_1: player1, player_2: player2,
+        src_width: videoMeta.src_width, src_height: videoMeta.src_height,
+        src_fps: videoMeta.src_fps, total_frames: videoMeta.total_frames,
+        gcs_path: firebasePath, video_key: videoKey,
+      }));
+    };
+    ws.onmessage = (e) => handleWsMessage(JSON.parse(e.data));
+    ws.onerror = () => updateOverallProgress(completedSrcFrames / totalSrcFrames * 100, "Connection error...");
+    ws.onclose = () => {};
+  }
+
+  function handleWsMessage(msg) {
+    switch (msg.type) {
+      case "status":
+        updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, msg.message);
+        break;
+      case "progress":
+        if (msg.pct !== undefined) {
+          currentSegPct = msg.pct / 100;
+          const overall = (completedSrcFrames + currentSegSrcFrames * currentSegPct) / Math.max(totalSrcFrames, 1) * 100;
+          updateOverallProgress(overall, "Tracking players...");
+        }
+        break;
+      case "segment_start":
+        currentSegSrcStart = msg.src_start;
+        currentSegSrcFrames = msg.src_frames;
+        currentSegPct = 0;
+        updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, "Tracking players...");
+        break;
+      case "segment_complete":
+        completedSrcFrames = currentSegSrcStart + currentSegSrcFrames;
+        updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, "Tracking players...");
+        break;
+      case "needs_reprompt":
+        showReprompt(msg);
+        break;
+      case "complete":
+        updateOverallProgress(100, "Complete!");
+        document.getElementById("overall-eta").textContent = "";
+        showResults(msg);
+        break;
+      case "error":
+        updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, `Error: ${msg.message}`);
+        break;
+    }
+  }
+
+  // ---- Reprompt ----
+  function showReprompt(msg) {
+    document.getElementById("reprompt-section").style.display = "block";
+    document.getElementById("reprompt-msg").textContent = msg.message || "Player tracking lost. Please re-select positions.";
+    repromptP1 = null; repromptP2 = null;
+    if (msg.frame_b64) {
+      const canvas = document.getElementById("reprompt-canvas"), ctx = canvas.getContext("2d");
+      repromptImage = new Image();
+      repromptImage.onload = () => { canvas.width = repromptImage.width; canvas.height = repromptImage.height; ctx.drawImage(repromptImage, 0, 0); };
+      repromptImage.src = "data:image/jpeg;base64," + msg.frame_b64;
+      canvas.addEventListener("click", onRepromptClick);
+      canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); onRepromptClickHandler(e, true); });
+    }
+    updateRepromptBadges();
+  }
+  function onRepromptClick(e) { onRepromptClickHandler(e, false); }
+  function onRepromptClickHandler(e, isRight) {
+    const canvas = document.getElementById("reprompt-canvas"), ctx = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.round((e.clientX - rect.left) * (canvas.width / rect.width));
+    const y = Math.round((e.clientY - rect.top) * (canvas.height / rect.height));
+    if (isRight || repromptP1 !== null) { repromptP2 = [x, y]; } else { repromptP1 = [x, y]; }
+    ctx.drawImage(repromptImage, 0, 0);
+    if (repromptP1) drawPoint(ctx, repromptP1, "#f05050", "P1");
+    if (repromptP2) drawPoint(ctx, repromptP2, "#5080f0", "P2");
+    updateRepromptBadges();
+  }
+  function updateRepromptBadges() {
+    const b1 = document.getElementById("rp-p1-badge"), b2 = document.getElementById("rp-p2-badge");
+    b1.textContent = repromptP1 ? `P1: (${repromptP1[0]}, ${repromptP1[1]})` : "P1: not set";
+    b1.className = `point-badge p1 ${repromptP1 ? "set" : "unset"}`;
+    b2.textContent = repromptP2 ? `P2: (${repromptP2[0]}, ${repromptP2[1]})` : "P2: not set";
+    b2.className = `point-badge p2 ${repromptP2 ? "set" : "unset"}`;
+    document.getElementById("btn-resume").disabled = !(repromptP1 && repromptP2);
+  }
+  document.getElementById("btn-resume").addEventListener("click", () => {
+    ws.send(JSON.stringify({ type: "reprompt", player_1: repromptP1, player_2: repromptP2 }));
+    document.getElementById("reprompt-section").style.display = "none";
+  });
+  document.getElementById("btn-skip").addEventListener("click", () => {
+    ws.send(JSON.stringify({ type: "skip" }));
+    document.getElementById("reprompt-section").style.display = "none";
+  });
+
+  // ---- Step 4: Results ----
+  function showResults(msg) {
+    setTimeout(() => {
+      showStep("results");
+      const dur = ((Date.now() - processingStartTime) / 1000 / 60).toFixed(1);
+      document.getElementById("results-summary").textContent = `Tracking complete. Processed in ${dur} minutes.`;
+      if (msg.video_url) {
+        document.getElementById("result-video").style.display = "block";
+        document.getElementById("result-video-link").href = msg.video_url;
+      }
+      if (msg.json_url) {
+        document.getElementById("result-json").style.display = "block";
+        document.getElementById("result-json-link").href = msg.json_url;
+        fetch(msg.json_url).then(r => r.json()).then(data => {
+          document.getElementById("json-preview").textContent = JSON.stringify({
+            total_frames_tracked: data.total_frames_tracked,
+            source_resolution: data.source_resolution,
+            sample_frames: data.frames?.slice(0, 5),
+          }, null, 2);
+        }).catch(() => {});
+      }
+    }, 1500);
+  }
+</script>
+</body>
+</html>
