@@ -5,153 +5,1300 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BoastIQ Player Tracker</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;500;700&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+  
   :root {
-    --bg: #0c0c0f;
-    --surface: #16161b;
-    --surface-2: #1e1e25;
-    --border: #2a2a35;
-    --text: #e0dfe6;
-    --text-dim: #7a7888;
-    --accent: #4af0c0;
-    --accent-dim: #2a8068;
+    --bg: #050508;
+    --surface: rgba(255,255,255,0.03);
+    --surface-hover: rgba(255,255,255,0.06);
+    --surface-solid: #0d0d12;
+    --border: rgba(255,255,255,0.08);
+    --border-bright: rgba(255,255,255,0.15);
+    --text: #f0f0f5;
+    --text-dim: rgba(255,255,255,0.5);
+    --accent: #00f0ff;
+    --accent-glow: rgba(0, 240, 255, 0.4);
+    --accent-dim: rgba(0, 240, 255, 0.15);
+    --purple: #a855f7;
+    --pink: #ec4899;
+    --blue: #3b82f6;
     --red: #f05050;
-    --blue: #5080f0;
     --yellow: #f0c040;
-    --mono: 'JetBrains Mono', monospace;
-    --sans: 'Outfit', sans-serif;
+    --green: #10b981;
   }
-
+  
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
+  
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: var(--sans);
+    font-family: 'Inter', -apple-system, sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
   }
-
+  
+  /* Animated gradient background */
+  .bg-gradient {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+  }
+  
+  .bg-gradient::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+      radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+      radial-gradient(circle at 40% 60%, rgba(236, 72, 153, 0.08) 0%, transparent 30%),
+      radial-gradient(circle at 60% 30%, rgba(0, 240, 255, 0.06) 0%, transparent 35%);
+    animation: gradientMove 25s ease-in-out infinite alternate;
+  }
+  
+  @keyframes gradientMove {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(-5%, -5%) rotate(3deg); }
+  }
+  
+  /* Header */
   .header {
-    padding: 24px 32px;
+    padding: 20px 32px;
     border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(20px);
+    background: rgba(5, 5, 8, 0.8);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .header .badge {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: var(--text-dim);
+    backdrop-filter: blur(10px);
+  }
+  
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+  
+  /* Steps */
+  .step {
+    display: none;
+    animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .step.active { display: block; }
+  
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .step-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .step-label::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  .step-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--text) 0%, rgba(255,255,255,0.7) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .step-desc {
+    color: var(--text-dim);
+    font-size: 15px;
+    margin-bottom: 32px;
+    line-height: 1.6;
+    max-width: 600px;
+  }
+  
+  /* Upload Zone */
+  .upload-zone {
+    position: relative;
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    padding: 80px 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--surface);
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+  }
+  
+  .upload-zone::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 22px;
+    padding: 2px;
+    background: linear-gradient(135deg, var(--purple), var(--blue), var(--accent));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  
+  .upload-zone:hover::before,
+  .upload-zone.dragover::before {
+    opacity: 1;
+  }
+  
+  .upload-zone:hover,
+  .upload-zone.dragover {
+    border-color: transparent;
+    background: var(--surface-hover);
+    transform: translateY(-2px);
+  }
+  
+  .upload-zone .icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    filter: grayscale(0.5);
+    transition: filter 0.3s, transform 0.3s;
+  }
+  
+  .upload-zone:hover .icon {
+    filter: grayscale(0);
+    transform: scale(1.1);
+  }
+  
+  .upload-zone strong {
+    font-size: 18px;
+    display: block;
+    margin-bottom: 8px;
+  }
+  
+  .upload-zone p {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-top: 8px;
+  }
+  
+  .upload-zone input { display: none; }
+  
+  /* Progress Bar */
+  .progress-bar-wrap {
+    margin-top: 24px;
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  
+  .progress-bar-bg {
+    height: 8px;
+    background: var(--surface-hover);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--purple));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    width: 0%;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  
+  .progress-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 12px;
+    text-align: right;
+  }
+  
+  /* Player Config Cards */
+  .player-config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  
+  @media (max-width: 640px) {
+    .player-config-grid { grid-template-columns: 1fr; }
+  }
+  
+  .player-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .player-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .player-card.p1::before {
+    background: linear-gradient(90deg, var(--red), var(--pink));
+  }
+  
+  .player-card.p2::before {
+    background: linear-gradient(90deg, var(--blue), var(--purple));
+  }
+  
+  .player-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-bright);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  }
+  
+  .player-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .player-card-header .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    box-shadow: 0 0 12px currentColor;
+  }
+  
+  .player-card.p1 .dot { background: var(--red); color: var(--red); }
+  .player-card.p2 .dot { background: var(--blue); color: var(--blue); }
+  
+  .player-card-header h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .form-group { margin-bottom: 20px; }
+  .form-group:last-child { margin-bottom: 0; }
+  
+  .form-label {
+    display: block;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  
+  .form-input {
+    width: 100%;
+    padding: 14px 18px;
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    transition: all 0.3s ease;
+  }
+  
+  .form-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  
+  .form-input::placeholder { color: var(--text-dim); }
+  
+  .hand-toggle { display: flex; gap: 10px; }
+  
+  .hand-btn {
+    flex: 1;
+    padding: 14px 18px;
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-dim);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .hand-btn:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+  }
+  
+  .hand-btn.selected {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--text);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  
+  .hand-btn .icon { font-size: 18px; }
+  
+  /* Frame Container */
+  .frame-wrapper {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 2px;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+  }
+  
+  .frame-container {
+    position: relative;
+    display: block;
+    border-radius: 18px;
+    overflow: hidden;
+    cursor: crosshair;
+    background: #000;
+  }
+  
+  .frame-container canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .points-info {
+    margin-top: 20px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .point-badge {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: all 0.3s ease;
+  }
+  
+  .point-badge.p1 { border-color: var(--red); color: var(--red); }
+  .point-badge.p2 { border-color: var(--blue); color: var(--blue); }
+  .point-badge.set { 
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(var(--color), 0.3);
+  }
+  .point-badge.unset { opacity: 0.4; }
+  
+  /* Buttons */
+  .btn {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s ease;
+  }
+  
+  .btn:hover::before {
+    transform: translateX(100%);
+  }
+  
+  .btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--blue));
+    color: #000;
+    font-weight: 700;
+    box-shadow: 0 4px 24px var(--accent-glow);
+  }
+  
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 32px var(--accent-glow);
+  }
+  
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+  }
+  
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--surface-hover);
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+  }
+  
+  .btn-row {
+    margin-top: 28px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  
+  /* Video Preview */
+  .video-preview {
+    width: 100%;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: #000;
+    margin-bottom: 28px;
+  }
+  
+  /* Overall Progress */
+  .overall-progress {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 28px;
+    backdrop-filter: blur(20px);
+  }
+  
+  .overall-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+  }
+  
+  .overall-pct {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .overall-eta {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  
+  .overall-bar-bg {
+    height: 12px;
+    background: var(--surface-hover);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  
+  .overall-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--purple), var(--pink));
+    background-size: 200% 100%;
+    border-radius: 6px;
+    transition: width 0.8s ease;
+    width: 0%;
+    animation: shimmer 2s linear infinite;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  
+  .overall-status {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 12px;
+  }
+  
+  /* Reprompt Banner */
+  .reprompt-banner {
+    background: rgba(240, 192, 64, 0.1);
+    border: 1px solid var(--yellow);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 16px;
   }
-  .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-  .header h1 span { color: var(--accent); }
-  .header .badge {
-    font-family: var(--mono); font-size: 11px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    padding: 3px 8px; border-radius: 4px; color: var(--text-dim);
+  
+  .reprompt-banner .icon { font-size: 28px; }
+  .reprompt-banner p { font-size: 14px; line-height: 1.5; }
+  
+  /* Video Meta */
+  .video-meta {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
   }
-
-  .container { max-width: 960px; margin: 0 auto; padding: 32px; }
-
-  .step { display: none; animation: fadeIn 0.3s ease; }
-  .step.active { display: block; }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
+  
+  .video-meta span {
+    background: var(--surface);
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  
+  .player-names-display {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 20px;
+  }
+  
+  .player-names-display .p1-name { color: var(--red); }
+  .player-names-display .p2-name { color: var(--blue); }
+  
+  /* Point Viewer */
+  .point-viewer { margin-top: 24px; }
+  
+  .pv-video-wrapper {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 2px;
+    background: linear-gradient(135deg, var(--purple), var(--blue), var(--accent));
+    margin-bottom: 24px;
+  }
+  
+  .pv-video-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: inherit;
+    opacity: 0.5;
+    animation: borderGlow 3s ease-in-out infinite alternate;
+  }
+  
+  @keyframes borderGlow {
+    0% { opacity: 0.3; }
+    100% { opacity: 0.7; }
+  }
+  
+  .pv-video-container {
+    position: relative;
+    background: #000;
+    border-radius: 18px;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+  }
+  
+  .pv-video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  
+  .pv-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .pv-points-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: blur(20px);
+  }
+  
+  .pv-points-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .pv-points-header h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .pv-points-header h3::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--accent);
+  }
+  
+  .pv-points-count {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    color: var(--text-dim);
+    background: var(--surface-hover);
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+  
+  .pv-points-list {
+    max-height: 500px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  
+  .pv-points-list::-webkit-scrollbar { width: 6px; }
+  .pv-points-list::-webkit-scrollbar-track { background: transparent; }
+  .pv-points-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  
+  .pv-point-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-radius: 12px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    margin-bottom: 4px;
+    border: 1px solid transparent;
+  }
+  
+  .pv-point-row:hover {
+    background: var(--surface-hover);
+    transform: translateX(4px);
+  }
+  
+  .pv-point-row.active {
+    background: linear-gradient(135deg, rgba(0,240,255,0.1), rgba(168,85,247,0.1));
+    border: 1px solid rgba(0,240,255,0.2);
+    box-shadow: 0 0 20px rgba(0,240,255,0.1);
+  }
+  
+  .pv-point-row.active .pv-point-label {
+    color: var(--accent);
+  }
+  
+  .pv-point-label {
+    font-weight: 500;
+    font-size: 14px;
+    transition: color 0.2s;
+  }
+  
+  .pv-point-time {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 6px 14px;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+  }
+  
+  .pv-point-row:hover .pv-point-time {
+    background: var(--accent);
+    color: #000;
+    transform: scale(1.05);
+  }
+  
+  /* Point Stats Panel Styles */
+  .pv-point-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .pv-point-item:hover { border-color: var(--border-bright); }
+  .pv-point-item.expanded { border-color: var(--accent); box-shadow: 0 0 30px rgba(0,240,255,0.1); }
+  
+  .pv-point-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .pv-point-header:hover { background: var(--surface-hover); }
+  
+  .pv-point-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  
+  .pv-point-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .pv-point-duration {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  
+  .pv-expand-icon {
+    font-size: 14px;
+    color: var(--text-dim);
+    transition: transform 0.3s ease;
+  }
+  
+  .pv-point-item.expanded .pv-expand-icon { transform: rotate(180deg); }
+  
+  .pv-point-stats {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 20px;
+    background: rgba(0,0,0,0.2);
+    animation: pvSlideDown 0.3s ease;
+  }
+  
+  .pv-point-item.expanded .pv-point-stats { display: block; }
+  
+  @keyframes pvSlideDown {
+    from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
-  .step-label {
-    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
-    letter-spacing: 2px; color: var(--accent); margin-bottom: 8px;
+  
+  .pv-point-summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
   }
-  .step-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
-  .step-desc { color: var(--text-dim); font-size: 15px; margin-bottom: 28px; line-height: 1.5; }
-
-  .upload-zone {
-    border: 2px dashed var(--border); border-radius: 12px; padding: 60px 40px;
-    text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface);
+  
+  .pv-summary-item { text-align: center; }
+  
+  .pv-summary-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
   }
-  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: var(--surface-2); }
-  .upload-zone .icon { font-size: 48px; margin-bottom: 16px; }
-  .upload-zone p { color: var(--text-dim); font-size: 14px; margin-top: 8px; }
-  .upload-zone input { display: none; }
-
-  .progress-bar-wrap { margin-top: 20px; display: none; }
-  .progress-bar-bg { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
-  .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.5s; width: 0%; }
-  .progress-text { font-family: var(--mono); font-size: 12px; color: var(--text-dim); margin-top: 8px; text-align: right; }
-
-  .frame-container {
-    position: relative; display: inline-block; border: 1px solid var(--border);
-    border-radius: 8px; overflow: hidden; cursor: crosshair; max-width: 100%;
+  
+  .pv-summary-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
   }
-  .frame-container canvas { display: block; max-width: 100%; height: auto; }
-
-  .points-info { margin-top: 16px; font-family: var(--mono); font-size: 13px; display: flex; gap: 24px; }
-  .point-badge { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); }
-  .point-badge.p1 { border-color: var(--red); color: var(--red); }
-  .point-badge.p2 { border-color: var(--blue); color: var(--blue); }
-  .point-badge.set { opacity: 1; }
-  .point-badge.unset { opacity: 0.4; }
-
-  .btn {
-    font-family: var(--sans); font-weight: 600; font-size: 14px; padding: 12px 28px;
-    border: none; border-radius: 8px; cursor: pointer; transition: all 0.15s;
-    display: inline-flex; align-items: center; gap: 8px;
+  
+  .pv-players-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
   }
-  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .btn-primary { background: var(--accent); color: var(--bg); }
-  .btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
-  .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
-  .btn-secondary:hover:not(:disabled) { border-color: var(--accent); }
-  .btn-row { margin-top: 20px; display: flex; gap: 12px; align-items: center; }
-
-  .video-preview {
-    width: 100%; border-radius: 8px; border: 1px solid var(--border);
-    background: #000; margin-bottom: 24px;
+  
+  @media (max-width: 600px) {
+    .pv-players-comparison { grid-template-columns: 1fr; }
+  }
+  
+  .pv-player-stats {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  
+  .pv-player-stats.p1 { border-top: 3px solid var(--red); }
+  .pv-player-stats.p2 { border-top: 3px solid var(--blue); }
+  
+  .pv-player-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .pv-player-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  
+  .pv-player-stats.p1 .pv-player-dot { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .pv-player-stats.p2 .pv-player-dot { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+  
+  .pv-player-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .pv-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  
+  .pv-stat-box {
+    background: var(--surface-hover);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .pv-stat-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  
+  .pv-stat-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  
+  .pv-shot-breakdown { margin-bottom: 14px; }
+  
+  .pv-shot-breakdown-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  
+  .pv-shot-category { margin-bottom: 6px; }
+  
+  .pv-shot-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: var(--surface);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .pv-shot-bar-row:hover { background: var(--surface-hover); }
+  .pv-shot-bar-row.expanded { background: var(--surface-hover); border-radius: 6px 6px 0 0; }
+  
+  .pv-shot-bar-label {
+    font-size: 11px;
+    width: 60px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  
+  .pv-shot-bar-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  
+  .pv-shot-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  
+  .pv-shot-bar-fill.forehand { background: linear-gradient(90deg, #10b981, #34d399); }
+  .pv-shot-bar-fill.backhand { background: linear-gradient(90deg, #a855f7, #c084fc); }
+  
+  .pv-shot-bar-count {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    width: 20px;
+    text-align: right;
+  }
+  
+  .pv-shot-expand-icon {
+    font-size: 10px;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+  
+  .pv-shot-bar-row.expanded .pv-shot-expand-icon { transform: rotate(180deg); }
+  
+  .pv-shot-classification {
+    display: none;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    padding: 10px;
+    animation: pvFadeIn 0.2s ease;
+  }
+  
+  .pv-shot-category.expanded .pv-shot-classification { display: block; }
+  
+  @keyframes pvFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .pv-classification-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  
+  .pv-classification-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: var(--surface);
+    border-radius: 4px;
+    font-size: 11px;
+  }
+  
+  .pv-classification-name { color: var(--text-dim); }
+  .pv-classification-count {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    color: var(--text);
+  }
+  
+  .pv-heatmap-section { margin-top: 12px; }
+  
+  .pv-heatmap-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  
+  .pv-heatmap-container {
+    background: #f8f8f8;
+    border-radius: 10px;
+    padding: 6px;
+    aspect-ratio: 0.656;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .pv-heatmap-container svg {
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Heatmaps Grid Section */
+  .pv-heatmaps-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  
+  .pv-heatmap-item { }
+  
+  .pv-heatmap-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  
+  .pv-heatmap-badge {
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  
+  .pv-heatmap-badge.player {
+    background: rgba(20, 70, 160, 0.3);
+    color: #6090e0;
+  }
+  
+  .pv-heatmap-badge.ball {
+    background: rgba(230, 126, 34, 0.3);
+    color: #e6a050;
+  }
+  
+  /* Front Wall Heatmap - wider aspect ratio */
+  .pv-heatmap-frontwall {
+    background: #f8f8f8;
+    border-radius: 10px;
+    padding: 6px;
+    aspect-ratio: 1.4;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .pv-heatmap-frontwall svg {
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Heatmap Legend */
+  .pv-heatmap-legend {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  
+  .pv-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .pv-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  
+  .pv-legend-dot.player { background: rgba(20, 70, 160, 0.8); }
+  .pv-legend-dot.ball { background: rgba(230, 126, 34, 0.8); }
+  
+  /* Match Overview Section */
+  .pv-match-overview {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .pv-overview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .pv-overview-header h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    position: relative;
+    padding-left: 16px;
+  }
+  
+  .pv-overview-header h3::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent);
+  }
+  
+  .pv-overview-loading {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  
+  .pv-overview-summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  
+  .pv-overview-stat {
+    text-align: center;
+  }
+  
+  .pv-overview-stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  
+  .pv-overview-stat-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  
+  .pv-overview-stat-value.neutral {
+    color: var(--text);
   }
 
-  .overall-progress { margin-bottom: 24px; }
-  .overall-progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
-  .overall-pct { font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--accent); }
-  .overall-eta { font-family: var(--mono); font-size: 13px; color: var(--text-dim); }
-  .overall-bar-bg { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
-  .overall-bar-fill {
-    height: 100%; background: linear-gradient(90deg, var(--accent-dim), var(--accent));
-    border-radius: 5px; transition: width 0.8s ease; width: 0%;
+  .pv-keyboard-hints {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
   }
-  .overall-status { font-family: var(--mono); font-size: 12px; color: var(--text-dim); margin-top: 8px; }
-
-  .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-top: 16px; }
-  .result-card h3 { font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-  .result-card a { color: var(--accent); text-decoration: none; font-family: var(--mono); font-size: 13px; }
-  .result-card a:hover { text-decoration: underline; }
-
-  .reprompt-banner {
-    background: var(--surface-2); border: 1px solid var(--yellow); border-radius: 8px;
-    padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+  
+  .pv-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
   }
-  .reprompt-banner .icon { font-size: 24px; }
-  .reprompt-banner p { font-size: 14px; line-height: 1.4; }
-
-  .video-meta {
-    font-family: var(--mono); font-size: 12px; color: var(--text-dim);
-    margin-bottom: 16px; display: flex; gap: 20px; flex-wrap: wrap;
+  
+  .pv-hint kbd {
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    color: var(--text);
   }
-  .video-meta span { background: var(--surface); padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); }
+  
+  /* Speed Indicator */
+  .speed-indicator {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 24px rgba(168, 85, 247, 0.4);
+    z-index: 200;
+  }
+  
+  .speed-indicator.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 </style>
 </head>
 <body>
 
+<div class="bg-gradient"></div>
+<div class="speed-indicator" id="speed-indicator">⚡ 2x Speed</div>
+
 <div class="header">
-  <h1>Boast<span>IQ</span> Tracker</h1>
+  <h1>BoastIQ Tracker</h1>
   <div class="badge">SAM2 · A100-80GB</div>
 </div>
 
 <div class="container">
-
-  <!-- STEP 1: Upload -->
+  <!-- Step 1: Upload -->
   <div id="step-upload" class="step active">
     <div class="step-label">Step 1</div>
     <div class="step-title">Upload Video</div>
-    <div class="step-desc">Upload your match video (MP4, up to 2 GB).</div>
+    <div class="step-desc">Upload your squash match video to begin tracking. We support MP4 files up to 2GB.</div>
     <div class="upload-zone" id="upload-zone">
       <div class="icon">🎬</div>
       <div><strong>Drop video here</strong> or click to browse</div>
@@ -164,24 +1311,65 @@
     </div>
   </div>
 
-  <!-- STEP 2: Select Players -->
-  <div id="step-select" class="step">
+  <!-- Step 2: Player Config -->
+  <div id="step-config" class="step">
     <div class="step-label">Step 2</div>
+    <div class="step-title">Player Information</div>
+    <div class="step-desc">Enter player names and select their dominant hand. This helps us identify forehands and backhands accurately.</div>
+    <div class="player-config-grid">
+      <div class="player-card p1">
+        <div class="player-card-header"><div class="dot"></div><h3>Player 1</h3></div>
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input type="text" class="form-input" id="p1-name" placeholder="Enter name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dominant Hand</label>
+          <div class="hand-toggle">
+            <button class="hand-btn selected" data-player="1" data-hand="right"><span class="icon">🤚</span> Right</button>
+            <button class="hand-btn" data-player="1" data-hand="left"><span class="icon">✋</span> Left</button>
+          </div>
+        </div>
+      </div>
+      <div class="player-card p2">
+        <div class="player-card-header"><div class="dot"></div><h3>Player 2</h3></div>
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input type="text" class="form-input" id="p2-name" placeholder="Enter name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dominant Hand</label>
+          <div class="hand-toggle">
+            <button class="hand-btn selected" data-player="2" data-hand="right"><span class="icon">🤚</span> Right</button>
+            <button class="hand-btn" data-player="2" data-hand="left"><span class="icon">✋</span> Left</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" id="btn-continue-config">Continue →</button></div>
+  </div>
+
+  <!-- Step 3: Select Players -->
+  <div id="step-select" class="step">
+    <div class="step-label">Step 3</div>
     <div class="step-title">Select Players</div>
-    <div class="step-desc">Click on each player. Left-click for Player 1 (red), right-click for Player 2 (blue).</div>
+    <div class="step-desc">Click on each player in the frame. Left-click for Player 1, right-click for Player 2.</div>
+    <div class="player-names-display" id="player-names-display"></div>
     <div class="video-meta" id="video-meta"></div>
-    <div class="frame-container" id="frame-container"><canvas id="frame-canvas"></canvas></div>
+    <div class="frame-wrapper">
+      <div class="frame-container" id="frame-container"><canvas id="frame-canvas"></canvas></div>
+    </div>
     <div class="points-info">
       <div class="point-badge p1 unset" id="p1-badge">P1: not set</div>
       <div class="point-badge p2 unset" id="p2-badge">P2: not set</div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-primary" id="btn-start" disabled>Start Tracking</button>
+      <button class="btn btn-primary" id="btn-start" disabled>Start Tracking →</button>
       <button class="btn btn-secondary" id="btn-reset-pts">Reset Points</button>
     </div>
   </div>
 
-  <!-- STEP 3: Processing -->
+  <!-- Step 4: Processing -->
   <div id="step-process" class="step">
     <div class="step-label">Processing</div>
     <div class="step-title">Tracking Players</div>
@@ -195,8 +1383,7 @@
       <div class="overall-bar-bg"><div class="overall-bar-fill" id="overall-fill"></div></div>
       <div class="overall-status" id="overall-status">Starting...</div>
     </div>
-    <!-- Reprompt UI -->
-    <div id="reprompt-section" style="display:none; margin-top: 24px;">
+    <div id="reprompt-section" style="display:none;">
       <div class="reprompt-banner">
         <div class="icon">⚠️</div>
         <div>
@@ -204,7 +1391,9 @@
           <p style="color: var(--text-dim); font-size: 13px; margin-top: 4px;">Click on the player positions in the frame below, then click Resume.</p>
         </div>
       </div>
-      <div class="frame-container" id="reprompt-frame-container"><canvas id="reprompt-canvas"></canvas></div>
+      <div class="frame-wrapper">
+        <div class="frame-container" id="reprompt-frame-container"><canvas id="reprompt-canvas"></canvas></div>
+      </div>
       <div class="points-info">
         <div class="point-badge p1 unset" id="rp-p1-badge">P1: not set</div>
         <div class="point-badge p2 unset" id="rp-p2-badge">P2: not set</div>
@@ -216,322 +1405,1199 @@
     </div>
   </div>
 
-  <!-- STEP 4: Results -->
+  <!-- Step 5: Results -->
   <div id="step-results" class="step">
     <div class="step-label">Complete</div>
     <div class="step-title">Results Ready</div>
     <div class="step-desc" id="results-summary"></div>
-    <div class="result-card" id="result-video" style="display:none;">
-      <h3>🎥 Tracked Video</h3>
-      <a id="result-video-link" href="#" target="_blank">Download video</a>
+    
+    <div class="point-viewer">
+      <div class="pv-video-wrapper">
+        <div class="pv-video-container">
+          <video id="pv-video"></video>
+        </div>
+      </div>
+      
+      <div class="pv-controls">
+        <button class="btn btn-secondary" id="pv-prev"><span>←</span> Prev Point</button>
+        <button class="btn btn-primary" id="pv-play">▶ Play</button>
+        <button class="btn btn-secondary" id="pv-next">Next Point <span>→</span></button>
+      </div>
+      
+      <!-- Match Overview Section -->
+      <div class="pv-match-overview" id="pv-match-overview">
+        <div class="pv-overview-header">
+          <h3>Match Overview</h3>
+          <span class="pv-overview-loading" id="pv-overview-loading">Loading stats...</span>
+        </div>
+        <div class="pv-overview-content" id="pv-overview-content" style="display:none;">
+          <!-- Summary stats row -->
+          <div class="pv-overview-summary" id="pv-overview-summary"></div>
+          
+          <!-- Players comparison -->
+          <div class="pv-players-comparison" id="pv-overview-players"></div>
+        </div>
+      </div>
+      
+      <div class="pv-points-section">
+        <div class="pv-points-header">
+          <h3>Match Points</h3>
+          <span class="pv-points-count" id="pv-points-count">0 points</span>
+        </div>
+        <div class="pv-points-list" id="pv-points-list"></div>
+        <div class="pv-keyboard-hints">
+          <div class="pv-hint"><kbd>Space</kbd> Play / Pause</div>
+          <div class="pv-hint"><kbd>Hold Space</kbd> 2x Speed</div>
+          <div class="pv-hint"><kbd>← →</kbd> Navigate</div>
+        </div>
+      </div>
     </div>
-    <div class="result-card" id="result-json" style="display:none;">
-      <h3>📊 Tracking JSON</h3>
-      <a id="result-json-link" href="#" target="_blank">Download JSON</a>
-      <pre id="json-preview" style="margin-top: 12px; font-size: 11px; color: var(--text-dim); max-height: 200px; overflow: auto;"></pre>
-    </div>
-    <div class="btn-row" style="margin-top: 24px;">
-      <button class="btn btn-primary" onclick="location.reload()">Track Another Video</button>
+    
+    <div class="btn-row" style="margin-top: 28px;">
+      <button class="btn btn-secondary" onclick="location.reload()">Track Another Video</button>
     </div>
   </div>
-
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getStorage, ref, uploadBytesResumable }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-
-    const firebaseConfig = {
-    // ⚠️ REPLACE THESE with your Firebase project config
-    // Firebase Console → Project Settings → General → Your apps → Web app
-    // Project: boastiq-dev | Bucket: boastiq
-    apiKey: "apiKey",
-    authDomain: "boastiq-dev.firebaseapp.com",
-    projectId: "boastiq-dev",
-    storageBucket: "boastiq.firebasestorage.app",
-    messagingSenderId: "000000000000",
-    appId: "ener_appID"
-  };
-
-  const fbApp = initializeApp(firebaseConfig);
-  const fbStorage = getStorage(fbApp);
-
-  // ---- State ----
-  let jobId = null, firebasePath = null, videoMeta = {}, videoKey = null;
-  let player1 = null, player2 = null, ws = null;
-  let frameImage = null, repromptImage = null;
-  let repromptP1 = null, repromptP2 = null;
-  let videoBlobUrl = null;
-
-  // Overall progress
-  let totalSrcFrames = 0, completedSrcFrames = 0;
-  let currentSegSrcStart = 0, currentSegSrcFrames = 0, currentSegPct = 0;
-  let processingStartTime = 0;
-
-  const API = window.location.origin;
-  const $steps = {
-    upload: document.getElementById("step-upload"),
-    select: document.getElementById("step-select"),
-    process: document.getElementById("step-process"),
-    results: document.getElementById("step-results"),
-  };
-
-  function showStep(name) {
-    Object.values($steps).forEach(s => s.classList.remove("active"));
-    $steps[name].classList.add("active");
-  }
-
-  function updateOverallProgress(pct, statusText) {
-    pct = Math.min(100, Math.max(0, pct));
-    document.getElementById("overall-pct").textContent = Math.round(pct) + "%";
-    document.getElementById("overall-fill").style.width = pct + "%";
-    if (statusText) document.getElementById("overall-status").textContent = statusText;
-    const elapsed = (Date.now() - processingStartTime) / 1000;
-    if (pct > 2 && elapsed > 10) {
-      const remaining = (elapsed / (pct / 100)) - elapsed;
-      const m = Math.floor(remaining / 60), s = Math.floor(remaining % 60);
-      document.getElementById("overall-eta").textContent =
-        remaining > 5 ? `~${m}m ${s}s remaining` : "Almost done...";
-    }
-  }
-
-  // ---- Step 1: Upload ----
-  const uploadZone = document.getElementById("upload-zone");
-  const fileInput = document.getElementById("file-input");
-  uploadZone.addEventListener("click", () => fileInput.click());
-  uploadZone.addEventListener("dragover", e => { e.preventDefault(); uploadZone.classList.add("dragover"); });
-  uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("dragover"));
-  uploadZone.addEventListener("drop", e => {
-    e.preventDefault(); uploadZone.classList.remove("dragover");
-    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-  });
-  fileInput.addEventListener("change", () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
-
-  async function handleFile(file) {
-    if (!file.type.startsWith("video/")) { alert("Please upload a video file."); return; }
-    videoBlobUrl = URL.createObjectURL(file);
-    const jobResp = await fetch(`${API}/api/create-job`, {
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getStorage, ref, uploadBytesResumable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+const firebaseConfig = { apiKey: "AIzaSyCTaKTaSIZvDM-y_5RL2qvs40FLuOXsJgM", authDomain: "boastiq-dev.firebaseapp.com", projectId: "boastiq-dev", storageBucket: "boastiq.firebasestorage.app", messagingSenderId: "000000000000", appId: "1:1002696629084:ios:db2ec36e1791cc0575ff99" };
+const fbApp = initializeApp(firebaseConfig);
+const fbStorage = getStorage(fbApp);
+let jobId = null, firebasePath = null, videoMeta = {}, videoKey = null;
+let player1 = null, player2 = null, ws = null;
+let frameImage = null, repromptImage = null;
+let repromptP1 = null, repromptP2 = null;
+let videoBlobUrl = null;
+let playerConfig = { player_1: { name: "Player 1", handedness: "right" }, player_2: { name: "Player 2", handedness: "right" } };
+let totalSrcFrames = 0, completedSrcFrames = 0, currentSegSrcStart = 0, currentSegSrcFrames = 0, currentSegPct = 0, processingStartTime = 0;
+const API = window.location.origin;
+const $steps = { upload: document.getElementById("step-upload"), config: document.getElementById("step-config"), select: document.getElementById("step-select"), process: document.getElementById("step-process"), results: document.getElementById("step-results") };
+function showStep(name) { Object.values($steps).forEach(s => s.classList.remove("active")); $steps[name].classList.add("active"); }
+function updateOverallProgress(pct, statusText) {
+  pct = Math.min(100, Math.max(0, pct));
+  document.getElementById("overall-pct").textContent = Math.round(pct) + "%";
+  document.getElementById("overall-fill").style.width = pct + "%";
+  if (statusText) document.getElementById("overall-status").textContent = statusText;
+  const elapsed = (Date.now() - processingStartTime) / 1000;
+  if (pct > 2 && elapsed > 10) { const remaining = (elapsed / (pct / 100)) - elapsed; const m = Math.floor(remaining / 60), s = Math.floor(remaining % 60); document.getElementById("overall-eta").textContent = remaining > 5 ? `~${m}m ${s}s remaining` : "Almost done..."; }
+}
+const uploadZone = document.getElementById("upload-zone");
+const fileInput = document.getElementById("file-input");
+uploadZone.addEventListener("click", () => fileInput.click());
+uploadZone.addEventListener("dragover", e => { e.preventDefault(); uploadZone.classList.add("dragover"); });
+uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("dragover"));
+uploadZone.addEventListener("drop", e => { e.preventDefault(); uploadZone.classList.remove("dragover"); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener("change", () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
+async function handleFile(file) {
+  if (!file.type.startsWith("video/")) { alert("Please upload a video file."); return; }
+  videoBlobUrl = URL.createObjectURL(file);
+  const jobResp = await fetch(`${API}/api/create-job`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ filename: file.name }) });
+  const jobData = await jobResp.json(); jobId = jobData.job_id; videoKey = jobData.video_key;
+  firebasePath = `uploaded-videos/${videoKey}.mp4`;
+  const storageRef = ref(fbStorage, firebasePath);
+  const uploadTask = uploadBytesResumable(storageRef, file);
+  const progWrap = document.getElementById("upload-progress"), progFill = document.getElementById("upload-fill"), progText = document.getElementById("upload-text");
+  progWrap.style.display = "block";
+  uploadTask.on("state_changed", (snap) => { const pct = (snap.bytesTransferred / snap.totalBytes * 100).toFixed(1); progFill.style.width = pct + "%"; progText.textContent = `${(snap.bytesTransferred/1e6).toFixed(1)} MB / ${(snap.totalBytes/1e6).toFixed(1)} MB (${pct}%)`; },
+    (err) => { progText.textContent = `Upload failed: ${err.message}`; progText.style.color = "var(--red)"; },
+    async () => { progText.textContent = "Upload complete. Preparing video...";
+      const prepResp = await fetch(`${API}/api/prepare`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ job_id: jobId, gcs_path: firebasePath, video_key: videoKey }) });
+      const meta = await prepResp.json(); if (meta.error) { progText.textContent = `Error: ${meta.error}`; return; } videoMeta = meta; showStep("config"); });
+}
+document.querySelectorAll(".hand-btn").forEach(btn => { btn.addEventListener("click", () => { const player = btn.dataset.player, hand = btn.dataset.hand; document.querySelectorAll(`.hand-btn[data-player="${player}"]`).forEach(b => b.classList.remove("selected")); btn.classList.add("selected"); if (player === "1") playerConfig.player_1.handedness = hand; else playerConfig.player_2.handedness = hand; }); });
+document.getElementById("btn-continue-config").addEventListener("click", async () => {
+  playerConfig.player_1.name = document.getElementById("p1-name").value.trim() || "Player 1";
+  playerConfig.player_2.name = document.getElementById("p2-name").value.trim() || "Player 2";
+  console.log("Saving player config:", { video_key: videoKey, player_1_name: playerConfig.player_1.name, player_2_name: playerConfig.player_2.name });
+  try {
+    const resp = await fetch(`${API}/api/player-config`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename: file.name }),
+      body: JSON.stringify({
+        video_key: videoKey,
+        player_1_name: playerConfig.player_1.name,
+        player_1_handedness: playerConfig.player_1.handedness,
+        player_2_name: playerConfig.player_2.name,
+        player_2_handedness: playerConfig.player_2.handedness
+      })
     });
-    const jobData = await jobResp.json();
-    jobId = jobData.job_id;
-    videoKey = jobData.video_key;
+    const result = await resp.json();
+    if (result.error) { console.error("Player config save error:", result.error); }
+    else { console.log("Player config saved successfully:", result); }
+  } catch (err) { console.error("Failed to save player config:", err); }
+  setupFrameSelection(videoMeta);
+  showStep("select");
+});
+function setupFrameSelection(meta) {
+  document.getElementById("player-names-display").innerHTML = `<span class="p1-name">${playerConfig.player_1.name} (${playerConfig.player_1.handedness[0].toUpperCase()})</span><span class="p2-name">${playerConfig.player_2.name} (${playerConfig.player_2.handedness[0].toUpperCase()})</span>`;
+  document.getElementById("video-meta").innerHTML = `<span>${meta.src_width}×${meta.src_height}</span><span>${meta.src_fps} fps</span><span>${meta.duration_sec}s</span>`;
+  const canvas = document.getElementById("frame-canvas"), ctx = canvas.getContext("2d");
+  frameImage = new Image();
+  frameImage.onload = () => { canvas.width = frameImage.width; canvas.height = frameImage.height; drawFrame(ctx, frameImage); };
+  frameImage.src = "data:image/jpeg;base64," + meta.frame_b64;
+  canvas.addEventListener("click", (e) => onFrameClick(e, canvas, ctx, false));
+  canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); onFrameClick(e, canvas, ctx, true); });
+}
+function onFrameClick(e, canvas, ctx, isRightClick) { const rect = canvas.getBoundingClientRect(); const x = Math.round((e.clientX - rect.left) * (canvas.width / rect.width)); const y = Math.round((e.clientY - rect.top) * (canvas.height / rect.height)); if (isRightClick || player1 !== null) { player2 = [x, y]; } else { player1 = [x, y]; } drawFrame(ctx, frameImage); updatePointBadges(); }
+function drawFrame(ctx, img) { ctx.drawImage(img, 0, 0); if (player1) drawPoint(ctx, player1, "#f05050", playerConfig.player_1.name.substring(0, 8)); if (player2) drawPoint(ctx, player2, "#5080f0", playerConfig.player_2.name.substring(0, 8)); }
+function drawPoint(ctx, pt, color, label) { ctx.beginPath(); ctx.arc(pt[0], pt[1], 14, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke(); ctx.shadowColor = color; ctx.shadowBlur = 15; ctx.fill(); ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "bold 14px Inter"; ctx.fillText(label, pt[0] + 20, pt[1] + 5); }
+function updatePointBadges() { const b1 = document.getElementById("p1-badge"), b2 = document.getElementById("p2-badge"); const p1Label = playerConfig.player_1.name.substring(0, 10), p2Label = playerConfig.player_2.name.substring(0, 10); b1.textContent = player1 ? `${p1Label}: (${player1[0]}, ${player1[1]})` : `${p1Label}: not set`; b1.className = `point-badge p1 ${player1 ? "set" : "unset"}`; b2.textContent = player2 ? `${p2Label}: (${player2[0]}, ${player2[1]})` : `${p2Label}: not set`; b2.className = `point-badge p2 ${player2 ? "set" : "unset"}`; document.getElementById("btn-start").disabled = !(player1 && player2); }
+document.getElementById("btn-reset-pts").addEventListener("click", () => { player1 = null; player2 = null; drawFrame(document.getElementById("frame-canvas").getContext("2d"), frameImage); updatePointBadges(); });
+document.getElementById("btn-start").addEventListener("click", startProcessing);
+function startProcessing() {
+  showStep("process"); processingStartTime = Date.now(); totalSrcFrames = videoMeta.total_frames; completedSrcFrames = 0;
+  document.getElementById("preview-video").src = videoBlobUrl; updateOverallProgress(0, "Connecting...");
+  const wsUrl = `${API.replace("http", "ws")}/ws/${jobId}`; ws = new WebSocket(wsUrl);
+  ws.onopen = () => { updateOverallProgress(0, "Connected. Starting tracking..."); ws.send(JSON.stringify({ type: "start_processing", player_1: player1, player_2: player2, src_width: videoMeta.src_width, src_height: videoMeta.src_height, src_fps: videoMeta.src_fps, total_frames: videoMeta.total_frames, gcs_path: firebasePath, video_key: videoKey })); };
+  ws.onmessage = (e) => handleWsMessage(JSON.parse(e.data));
+  ws.onerror = () => updateOverallProgress(completedSrcFrames / totalSrcFrames * 100, "Connection error...");
+  ws.onclose = () => {};
+}
+function handleWsMessage(msg) {
+  switch (msg.type) {
+    case "status": updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, msg.message); break;
+    case "progress": if (msg.pct !== undefined) { currentSegPct = msg.pct / 100; const overall = (completedSrcFrames + currentSegSrcFrames * currentSegPct) / Math.max(totalSrcFrames, 1) * 100; updateOverallProgress(overall, "Tracking players..."); } break;
+    case "segment_start": currentSegSrcStart = msg.src_start; currentSegSrcFrames = msg.src_frames; currentSegPct = 0; updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, "Tracking players..."); break;
+    case "segment_complete": completedSrcFrames = currentSegSrcStart + currentSegSrcFrames; updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, "Tracking players..."); break;
+    case "needs_reprompt": showReprompt(msg); break;
+    case "complete": updateOverallProgress(100, "Complete!"); document.getElementById("overall-eta").textContent = ""; showResults(msg); break;
+    case "error": updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, `Error: ${msg.message}`); break;
+  }
+}
+function showReprompt(msg) {
+  document.getElementById("reprompt-section").style.display = "block";
+  document.getElementById("reprompt-msg").textContent = msg.message || "Player tracking lost. Please re-select positions.";
+  repromptP1 = null; repromptP2 = null;
+  if (msg.frame_b64) { const canvas = document.getElementById("reprompt-canvas"), ctx = canvas.getContext("2d"); repromptImage = new Image(); repromptImage.onload = () => { canvas.width = repromptImage.width; canvas.height = repromptImage.height; ctx.drawImage(repromptImage, 0, 0); }; repromptImage.src = "data:image/jpeg;base64," + msg.frame_b64; canvas.addEventListener("click", onRepromptClick); canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); onRepromptClickHandler(e, true); }); }
+  updateRepromptBadges();
+}
+function onRepromptClick(e) { onRepromptClickHandler(e, false); }
+function onRepromptClickHandler(e, isRight) { const canvas = document.getElementById("reprompt-canvas"), ctx = canvas.getContext("2d"); const rect = canvas.getBoundingClientRect(); const x = Math.round((e.clientX - rect.left) * (canvas.width / rect.width)); const y = Math.round((e.clientY - rect.top) * (canvas.height / rect.height)); if (isRight || repromptP1 !== null) { repromptP2 = [x, y]; } else { repromptP1 = [x, y]; } ctx.drawImage(repromptImage, 0, 0); if (repromptP1) drawPoint(ctx, repromptP1, "#f05050", playerConfig.player_1.name.substring(0, 8)); if (repromptP2) drawPoint(ctx, repromptP2, "#5080f0", playerConfig.player_2.name.substring(0, 8)); updateRepromptBadges(); }
+function updateRepromptBadges() { const b1 = document.getElementById("rp-p1-badge"), b2 = document.getElementById("rp-p2-badge"); const p1Label = playerConfig.player_1.name.substring(0, 10), p2Label = playerConfig.player_2.name.substring(0, 10); b1.textContent = repromptP1 ? `${p1Label}: (${repromptP1[0]}, ${repromptP1[1]})` : `${p1Label}: not set`; b1.className = `point-badge p1 ${repromptP1 ? "set" : "unset"}`; b2.textContent = repromptP2 ? `${p2Label}: (${repromptP2[0]}, ${repromptP2[1]})` : `${p2Label}: not set`; b2.className = `point-badge p2 ${repromptP2 ? "set" : "unset"}`; document.getElementById("btn-resume").disabled = !(repromptP1 && repromptP2); }
+document.getElementById("btn-resume").addEventListener("click", () => { ws.send(JSON.stringify({ type: "reprompt", player_1: repromptP1, player_2: repromptP2 })); document.getElementById("reprompt-section").style.display = "none"; });
+document.getElementById("btn-skip").addEventListener("click", () => { ws.send(JSON.stringify({ type: "skip" })); document.getElementById("reprompt-section").style.display = "none"; });
 
-    firebasePath = `uploaded-videos/${videoKey}.mp4`;
-    const storageRef = ref(fbStorage, firebasePath);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    const progWrap = document.getElementById("upload-progress");
-    const progFill = document.getElementById("upload-fill");
-    const progText = document.getElementById("upload-text");
-    progWrap.style.display = "block";
-
-    uploadTask.on("state_changed",
-      (snap) => {
-        const pct = (snap.bytesTransferred / snap.totalBytes * 100).toFixed(1);
-        progFill.style.width = pct + "%";
-        progText.textContent = `${(snap.bytesTransferred/1e6).toFixed(1)} MB / ${(snap.totalBytes/1e6).toFixed(1)} MB (${pct}%)`;
-      },
-      (err) => { progText.textContent = `Upload failed: ${err.message}`; progText.style.color = "var(--red)"; },
-      async () => {
-        progText.textContent = "Upload complete. Preparing video...";
-        const prepResp = await fetch(`${API}/api/prepare`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ job_id: jobId, gcs_path: firebasePath, video_key: videoKey }),
-        });
-        const meta = await prepResp.json();
-        if (meta.error) { progText.textContent = `Error: ${meta.error}`; return; }
-        videoMeta = meta;
-        setupFrameSelection(meta);
-        showStep("select");
+function showResults(msg) {
+  setTimeout(() => { 
+    showStep("results"); 
+    const dur = ((Date.now() - processingStartTime) / 1000 / 60).toFixed(1); 
+    document.getElementById("results-summary").textContent = `Tracking complete. Processed in ${dur} minutes.`;
+    
+    const pvVideo = document.getElementById("pv-video");
+    const pvPlay = document.getElementById("pv-play");
+    const pvPrev = document.getElementById("pv-prev");
+    const pvNext = document.getElementById("pv-next");
+    const pvList = document.getElementById("pv-points-list");
+    const speedIndicator = document.getElementById("speed-indicator");
+    
+    let points = [];
+    let currentPointIndex = 0;
+    
+    if (videoBlobUrl) { pvVideo.src = videoBlobUrl; pvVideo.load(); }
+    
+    // Use API endpoint (more reliable - handles GCS auth on backend)
+    const pointsUrl = `${API}/api/points/${videoKey}`;
+    
+    console.log("Complete message received:", msg);
+    console.log("Video key:", videoKey);
+    console.log("Points URL:", pointsUrl);
+    
+    // Function to fetch and load points
+    async function loadPoints(retries = 30, delay = 5000) {
+      if (!videoKey) {
+        console.warn("No video_key available");
+        document.getElementById("pv-points-count").textContent = "No video key";
+        return;
       }
-    );
-  }
-
-  // ---- Step 2: Player Selection ----
-  function setupFrameSelection(meta) {
-    document.getElementById("video-meta").innerHTML =
-      `<span>${meta.src_width}×${meta.src_height}</span><span>${meta.src_fps} fps</span><span>${meta.duration_sec}s</span>`;
-    const canvas = document.getElementById("frame-canvas");
-    const ctx = canvas.getContext("2d");
-    frameImage = new Image();
-    frameImage.onload = () => { canvas.width = frameImage.width; canvas.height = frameImage.height; drawFrame(ctx, frameImage); };
-    frameImage.src = "data:image/jpeg;base64," + meta.frame_b64;
-    canvas.addEventListener("click", (e) => onFrameClick(e, canvas, ctx, false));
-    canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); onFrameClick(e, canvas, ctx, true); });
-  }
-
-  function onFrameClick(e, canvas, ctx, isRightClick) {
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.round((e.clientX - rect.left) * (canvas.width / rect.width));
-    const y = Math.round((e.clientY - rect.top) * (canvas.height / rect.height));
-    if (isRightClick || player1 !== null) { player2 = [x, y]; } else { player1 = [x, y]; }
-    drawFrame(ctx, frameImage);
-    updatePointBadges();
-  }
-
-  function drawFrame(ctx, img) {
-    ctx.drawImage(img, 0, 0);
-    if (player1) drawPoint(ctx, player1, "#f05050", "P1");
-    if (player2) drawPoint(ctx, player2, "#5080f0", "P2");
-  }
-
-  function drawPoint(ctx, pt, color, label) {
-    ctx.beginPath(); ctx.arc(pt[0], pt[1], 12, 0, Math.PI * 2);
-    ctx.fillStyle = color; ctx.fill();
-    ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = "#fff"; ctx.font = "bold 14px Outfit";
-    ctx.fillText(label, pt[0] + 16, pt[1] + 5);
-  }
-
-  function updatePointBadges() {
-    const b1 = document.getElementById("p1-badge"), b2 = document.getElementById("p2-badge");
-    b1.textContent = player1 ? `P1: (${player1[0]}, ${player1[1]})` : "P1: not set";
-    b1.className = `point-badge p1 ${player1 ? "set" : "unset"}`;
-    b2.textContent = player2 ? `P2: (${player2[0]}, ${player2[1]})` : "P2: not set";
-    b2.className = `point-badge p2 ${player2 ? "set" : "unset"}`;
-    document.getElementById("btn-start").disabled = !(player1 && player2);
-  }
-
-  document.getElementById("btn-reset-pts").addEventListener("click", () => {
-    player1 = null; player2 = null;
-    drawFrame(document.getElementById("frame-canvas").getContext("2d"), frameImage);
-    updatePointBadges();
-  });
-  document.getElementById("btn-start").addEventListener("click", startProcessing);
-
-  // ---- Step 3: Processing ----
-  function startProcessing() {
-    showStep("process");
-    processingStartTime = Date.now();
-    totalSrcFrames = videoMeta.total_frames;
-    completedSrcFrames = 0;
-    document.getElementById("preview-video").src = videoBlobUrl;
-    updateOverallProgress(0, "Connecting...");
-
-    const wsUrl = `${API.replace("http", "ws")}/ws/${jobId}`;
-    ws = new WebSocket(wsUrl);
-    ws.onopen = () => {
-      updateOverallProgress(0, "Connected. Starting tracking...");
-      ws.send(JSON.stringify({
-        type: "start_processing", player_1: player1, player_2: player2,
-        src_width: videoMeta.src_width, src_height: videoMeta.src_height,
-        src_fps: videoMeta.src_fps, total_frames: videoMeta.total_frames,
-        gcs_path: firebasePath, video_key: videoKey,
-      }));
-    };
-    ws.onmessage = (e) => handleWsMessage(JSON.parse(e.data));
-    ws.onerror = () => updateOverallProgress(completedSrcFrames / totalSrcFrames * 100, "Connection error...");
-    ws.onclose = () => {};
-  }
-
-  function handleWsMessage(msg) {
-    switch (msg.type) {
-      case "status":
-        updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, msg.message);
-        break;
-      case "progress":
-        if (msg.pct !== undefined) {
-          currentSegPct = msg.pct / 100;
-          const overall = (completedSrcFrames + currentSegSrcFrames * currentSegPct) / Math.max(totalSrcFrames, 1) * 100;
-          updateOverallProgress(overall, "Tracking players...");
+      
+      console.log("Fetching points from:", pointsUrl);
+      
+      for (let i = 0; i < retries; i++) {
+        try {
+          document.getElementById("pv-points-count").textContent = `Loading... (${i + 1}/${retries})`;
+          const r = await fetch(pointsUrl);
+          console.log(`Attempt ${i + 1}: Response status ${r.status}`);
+          
+          if (r.status === 404 || r.status === 403) {
+            // File not ready yet, wait and retry
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          if (!r.ok) {
+            console.log(`HTTP error ${r.status}`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          
+          const data = await r.json();
+          console.log("Points data received:", data);
+          
+          // Handle various JSON formats
+          if (Array.isArray(data)) {
+            points = data;
+          } else if (data.point_starts && Array.isArray(data.point_starts)) {
+            points = data.point_starts;
+          } else if (data.points && Array.isArray(data.points)) {
+            points = data.points;
+          } else {
+            console.error("Unexpected data format:", data);
+            points = [];
+          }
+          
+          document.getElementById("pv-points-count").textContent = points.length + " points";
+          renderPointsList();
+          updateButtons();
+          return; // Success!
+          
+        } catch (e) {
+          console.log(`Fetch error on attempt ${i + 1}:`, e);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
-        break;
-      case "segment_start":
-        currentSegSrcStart = msg.src_start;
-        currentSegSrcFrames = msg.src_frames;
-        currentSegPct = 0;
-        updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, "Tracking players...");
-        break;
-      case "segment_complete":
-        completedSrcFrames = currentSegSrcStart + currentSegSrcFrames;
-        updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, "Tracking players...");
-        break;
-      case "needs_reprompt":
-        showReprompt(msg);
-        break;
-      case "complete":
-        updateOverallProgress(100, "Complete!");
-        document.getElementById("overall-eta").textContent = "";
-        showResults(msg);
-        break;
-      case "error":
-        updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, `Error: ${msg.message}`);
-        break;
-    }
-  }
-
-  // ---- Reprompt ----
-  function showReprompt(msg) {
-    document.getElementById("reprompt-section").style.display = "block";
-    document.getElementById("reprompt-msg").textContent = msg.message || "Player tracking lost. Please re-select positions.";
-    repromptP1 = null; repromptP2 = null;
-    if (msg.frame_b64) {
-      const canvas = document.getElementById("reprompt-canvas"), ctx = canvas.getContext("2d");
-      repromptImage = new Image();
-      repromptImage.onload = () => { canvas.width = repromptImage.width; canvas.height = repromptImage.height; ctx.drawImage(repromptImage, 0, 0); };
-      repromptImage.src = "data:image/jpeg;base64," + msg.frame_b64;
-      canvas.addEventListener("click", onRepromptClick);
-      canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); onRepromptClickHandler(e, true); });
-    }
-    updateRepromptBadges();
-  }
-  function onRepromptClick(e) { onRepromptClickHandler(e, false); }
-  function onRepromptClickHandler(e, isRight) {
-    const canvas = document.getElementById("reprompt-canvas"), ctx = canvas.getContext("2d");
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.round((e.clientX - rect.left) * (canvas.width / rect.width));
-    const y = Math.round((e.clientY - rect.top) * (canvas.height / rect.height));
-    if (isRight || repromptP1 !== null) { repromptP2 = [x, y]; } else { repromptP1 = [x, y]; }
-    ctx.drawImage(repromptImage, 0, 0);
-    if (repromptP1) drawPoint(ctx, repromptP1, "#f05050", "P1");
-    if (repromptP2) drawPoint(ctx, repromptP2, "#5080f0", "P2");
-    updateRepromptBadges();
-  }
-  function updateRepromptBadges() {
-    const b1 = document.getElementById("rp-p1-badge"), b2 = document.getElementById("rp-p2-badge");
-    b1.textContent = repromptP1 ? `P1: (${repromptP1[0]}, ${repromptP1[1]})` : "P1: not set";
-    b1.className = `point-badge p1 ${repromptP1 ? "set" : "unset"}`;
-    b2.textContent = repromptP2 ? `P2: (${repromptP2[0]}, ${repromptP2[1]})` : "P2: not set";
-    b2.className = `point-badge p2 ${repromptP2 ? "set" : "unset"}`;
-    document.getElementById("btn-resume").disabled = !(repromptP1 && repromptP2);
-  }
-  document.getElementById("btn-resume").addEventListener("click", () => {
-    ws.send(JSON.stringify({ type: "reprompt", player_1: repromptP1, player_2: repromptP2 }));
-    document.getElementById("reprompt-section").style.display = "none";
-  });
-  document.getElementById("btn-skip").addEventListener("click", () => {
-    ws.send(JSON.stringify({ type: "skip" }));
-    document.getElementById("reprompt-section").style.display = "none";
-  });
-
-  // ---- Step 4: Results ----
-  function showResults(msg) {
-    setTimeout(() => {
-      showStep("results");
-      const dur = ((Date.now() - processingStartTime) / 1000 / 60).toFixed(1);
-      document.getElementById("results-summary").textContent = `Tracking complete. Processed in ${dur} minutes.`;
-      if (msg.video_url) {
-        document.getElementById("result-video").style.display = "block";
-        document.getElementById("result-video-link").href = msg.video_url;
       }
-      if (msg.json_url) {
-        document.getElementById("result-json").style.display = "block";
-        document.getElementById("result-json-link").href = msg.json_url;
-        fetch(msg.json_url).then(r => r.json()).then(data => {
-          document.getElementById("json-preview").textContent = JSON.stringify({
-            total_frames_tracked: data.total_frames_tracked,
-            source_resolution: data.source_resolution,
-            sample_frames: data.frames?.slice(0, 5),
-          }, null, 2);
-        }).catch(() => {});
+      
+      // All retries failed - show manual retry option with debug link
+      console.error("Failed to load points after all retries. URL:", pointsUrl);
+      const shortUrl = pointsUrl.length > 60 ? pointsUrl.substring(0, 60) + "..." : pointsUrl;
+      document.getElementById("pv-points-count").innerHTML = 
+        `<div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">` +
+        `<div><button onclick="window.retryLoadPoints()" style="background:var(--accent);color:#000;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:inherit;margin-right:8px;">⟳ Retry</button>` +
+        `<a href="${pointsUrl}" target="_blank" style="color:var(--accent);font-size:12px;">Open URL</a></div>` +
+        `<div style="font-size:10px;color:var(--text-dim);word-break:break-all;">${shortUrl}</div>` +
+        `</div>`;
+    }
+    
+    // Make retry function available globally
+    window.retryLoadPoints = () => loadPoints(10, 3000);
+    
+    // Start loading
+    loadPoints();
+    
+    // Load match overview (aggregate stats)
+    async function loadMatchOverview() {
+      const overviewLoading = document.getElementById("pv-overview-loading");
+      const overviewContent = document.getElementById("pv-overview-content");
+      const overviewSummary = document.getElementById("pv-overview-summary");
+      const overviewPlayers = document.getElementById("pv-overview-players");
+      
+      try {
+        // First try to fetch the points index
+        const indexResp = await fetch(`${API}/api/points/${videoKey}/index`);
+        if (!indexResp.ok) {
+          // Wait a bit and retry - data might not be ready
+          overviewLoading.textContent = "Generating stats...";
+          await new Promise(r => setTimeout(r, 5000));
+          return loadMatchOverview();
+        }
+        
+        const indexData = await indexResp.json();
+        const totalPoints = indexData.total_points || 0;
+        
+        if (totalPoints === 0) {
+          overviewLoading.textContent = "No points data available";
+          return;
+        }
+        
+        overviewLoading.textContent = `Loading 0/${totalPoints} points...`;
+        
+        // Fetch all point rallies
+        const allRallies = [];
+        for (let i = 1; i <= totalPoints; i++) {
+          try {
+            const r = await fetch(`${API}/api/points/${videoKey}/${i}`);
+            if (r.ok) {
+              const data = await r.json();
+              allRallies.push(data);
+              pointRallyCache[i] = data; // Cache for later use
+            }
+            overviewLoading.textContent = `Loading ${i}/${totalPoints} points...`;
+          } catch (e) {
+            console.warn(`Failed to load point ${i}:`, e);
+          }
+        }
+        
+        if (allRallies.length === 0) {
+          overviewLoading.textContent = "Failed to load point data";
+          return;
+        }
+        
+        // Calculate aggregate stats
+        const p1Name = indexData.player_1?.name || playerConfig.player_1?.name || "Player 1";
+        const p2Name = indexData.player_2?.name || playerConfig.player_2?.name || "Player 2";
+        
+        // Duration stats
+        const durations = allRallies.map(r => r.duration_sec || 0);
+        const avgDuration = (durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(1);
+        const totalDuration = durations.reduce((a, b) => a + b, 0).toFixed(1);
+        
+        // Aggregate all shots
+        let p1TotalShots = 0, p2TotalShots = 0;
+        let p1Forehands = [], p2Forehands = [];
+        let p1Backhands = [], p2Backhands = [];
+        let p1Positions = [], p2Positions = [];
+        let p1FrontWall = [], p2FrontWall = [];
+        let p1FloorBounce = [], p2FloorBounce = [];
+        let p1TotalDistance = 0, p2TotalDistance = 0;
+        
+        allRallies.forEach(rallyData => {
+          const rally = rallyData.rally || [];
+          
+          rally.forEach(shot => {
+            if (shot.hit_by === "player_1") {
+              p1TotalShots++;
+              if (shot.shot_type === "forehand") p1Forehands.push(shot);
+              else if (shot.shot_type === "backhand") p1Backhands.push(shot);
+              // Collect front wall contact
+              if (shot.front_wall_contact && shot.front_wall_contact.x != null) {
+                p1FrontWall.push(shot.front_wall_contact);
+              }
+              // Collect floor bounce
+              if (shot.floor_bounce && shot.floor_bounce.x != null) {
+                p1FloorBounce.push(shot.floor_bounce);
+              }
+            } else {
+              p2TotalShots++;
+              if (shot.shot_type === "forehand") p2Forehands.push(shot);
+              else if (shot.shot_type === "backhand") p2Backhands.push(shot);
+              // Collect front wall contact
+              if (shot.front_wall_contact && shot.front_wall_contact.x != null) {
+                p2FrontWall.push(shot.front_wall_contact);
+              }
+              // Collect floor bounce
+              if (shot.floor_bounce && shot.floor_bounce.x != null) {
+                p2FloorBounce.push(shot.floor_bounce);
+              }
+            }
+            
+            // Collect positions
+            if (shot.player_1_position && shot.player_1_position.x != null) {
+              p1Positions.push(shot.player_1_position);
+            }
+            if (shot.player_2_position && shot.player_2_position.x != null) {
+              p2Positions.push(shot.player_2_position);
+            }
+          });
+          
+          // Calculate distance for this rally
+          for (let i = 1; i < rally.length; i++) {
+            const prev1 = rally[i-1].player_1_position;
+            const curr1 = rally[i].player_1_position;
+            if (prev1 && curr1 && prev1.x != null && curr1.x != null) {
+              const dx = (curr1.x || 0) - (prev1.x || 0);
+              const dy = (curr1.y || 0) - (prev1.y || 0);
+              p1TotalDistance += Math.sqrt(dx*dx + dy*dy);
+            }
+            
+            const prev2 = rally[i-1].player_2_position;
+            const curr2 = rally[i].player_2_position;
+            if (prev2 && curr2 && prev2.x != null && curr2.x != null) {
+              const dx = (curr2.x || 0) - (prev2.x || 0);
+              const dy = (curr2.y || 0) - (prev2.y || 0);
+              p2TotalDistance += Math.sqrt(dx*dx + dy*dy);
+            }
+          }
+        });
+        
+        // Render summary stats
+        overviewSummary.innerHTML = `
+          <div class="pv-overview-stat">
+            <div class="pv-overview-stat-label">Total Points</div>
+            <div class="pv-overview-stat-value neutral">${totalPoints}</div>
+          </div>
+          <div class="pv-overview-stat">
+            <div class="pv-overview-stat-label">Avg Point Duration</div>
+            <div class="pv-overview-stat-value">${avgDuration}s</div>
+          </div>
+          <div class="pv-overview-stat">
+            <div class="pv-overview-stat-label">Total Match Time</div>
+            <div class="pv-overview-stat-value">${formatTime(parseFloat(totalDuration))}</div>
+          </div>
+          <div class="pv-overview-stat">
+            <div class="pv-overview-stat-label">Total Shots</div>
+            <div class="pv-overview-stat-value neutral">${p1TotalShots + p2TotalShots}</div>
+          </div>
+        `;
+        
+        // Render players comparison
+        overviewPlayers.innerHTML = `
+          ${renderMatchPlayerStats("p1", p1Name, p1TotalDistance.toFixed(1), p1TotalShots, p1Forehands, p1Backhands, p1Positions, p1FrontWall, p1FloorBounce, "match")}
+          ${renderMatchPlayerStats("p2", p2Name, p2TotalDistance.toFixed(1), p2TotalShots, p2Forehands, p2Backhands, p2Positions, p2FrontWall, p2FloorBounce, "match")}
+        `;
+        
+        // Add shot category toggle handlers
+        overviewPlayers.querySelectorAll(".pv-shot-bar-row").forEach(row => {
+          row.addEventListener("click", () => {
+            const category = row.parentElement;
+            category.classList.toggle("expanded");
+            row.classList.toggle("expanded");
+          });
+        });
+        
+        // Show content, hide loading
+        overviewLoading.style.display = "none";
+        overviewContent.style.display = "block";
+        
+      } catch (e) {
+        console.error("Failed to load match overview:", e);
+        overviewLoading.textContent = "Failed to load stats";
       }
-    }, 1500);
-  }
+    }
+    
+    function renderMatchPlayerStats(playerClass, name, distance, totalShots, forehands, backhands, positions, frontWallHits, floorBounces, suffix) {
+      const fhCount = forehands.length;
+      const bhCount = backhands.length;
+      const maxShots = Math.max(fhCount, bhCount, 1);
+      const fhPct = (fhCount / maxShots) * 100;
+      const bhPct = (bhCount / maxShots) * 100;
+      
+      // Count shot classifications
+      const fhDrive = forehands.filter(s => s.shot_class === "drive").length;
+      const fhDrop = forehands.filter(s => s.shot_class === "drop").length;
+      const fhBoast = forehands.filter(s => s.shot_class === "boast").length;
+      const fhVolley = forehands.filter(s => s.shot_class === "volley").length;
+      
+      const bhDrive = backhands.filter(s => s.shot_class === "drive").length;
+      const bhDrop = backhands.filter(s => s.shot_class === "drop").length;
+      const bhBoast = backhands.filter(s => s.shot_class === "boast").length;
+      const bhVolley = backhands.filter(s => s.shot_class === "volley").length;
+      
+      // Generate all three heatmap SVGs
+      const positionHeatmapId = `heatmap-pos-${playerClass}-${suffix}`;
+      const frontWallHeatmapId = `heatmap-fw-${playerClass}-${suffix}`;
+      const floorBounceHeatmapId = `heatmap-fl-${playerClass}-${suffix}`;
+      
+      const positionHeatmapSvg = generateHeatmapSvg(positions, positionHeatmapId);
+      const frontWallHeatmapSvg = generateFrontWallHeatmapSvg(frontWallHits, frontWallHeatmapId);
+      const floorBounceHeatmapSvg = generateFloorBounceHeatmapSvg(floorBounces, floorBounceHeatmapId);
+      
+      return `
+        <div class="pv-player-stats ${playerClass}">
+          <div class="pv-player-header">
+            <div class="pv-player-dot"></div>
+            <span class="pv-player-name">${name}</span>
+          </div>
+          
+          <div class="pv-stats-grid">
+            <div class="pv-stat-box">
+              <div class="pv-stat-value">${distance}m</div>
+              <div class="pv-stat-label">Total Distance</div>
+            </div>
+            <div class="pv-stat-box">
+              <div class="pv-stat-value">${totalShots}</div>
+              <div class="pv-stat-label">Total Shots</div>
+            </div>
+          </div>
+          
+          <div class="pv-shot-breakdown">
+            <div class="pv-shot-breakdown-title">Shot Breakdown</div>
+            
+            <div class="pv-shot-category">
+              <div class="pv-shot-bar-row">
+                <span class="pv-shot-bar-label">Forehand</span>
+                <div class="pv-shot-bar-track">
+                  <div class="pv-shot-bar-fill forehand" style="width:${fhPct}%"></div>
+                </div>
+                <span class="pv-shot-bar-count">${fhCount}</span>
+                <span class="pv-shot-expand-icon">▼</span>
+              </div>
+              <div class="pv-shot-classification">
+                <div class="pv-classification-grid">
+                  <div class="pv-classification-item"><span class="pv-classification-name">Drive</span><span class="pv-classification-count">${fhDrive}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Drop</span><span class="pv-classification-count">${fhDrop}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Boast</span><span class="pv-classification-count">${fhBoast}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Volley</span><span class="pv-classification-count">${fhVolley}</span></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="pv-shot-category">
+              <div class="pv-shot-bar-row">
+                <span class="pv-shot-bar-label">Backhand</span>
+                <div class="pv-shot-bar-track">
+                  <div class="pv-shot-bar-fill backhand" style="width:${bhPct}%"></div>
+                </div>
+                <span class="pv-shot-bar-count">${bhCount}</span>
+                <span class="pv-shot-expand-icon">▼</span>
+              </div>
+              <div class="pv-shot-classification">
+                <div class="pv-classification-grid">
+                  <div class="pv-classification-item"><span class="pv-classification-name">Drive</span><span class="pv-classification-count">${bhDrive}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Drop</span><span class="pv-classification-count">${bhDrop}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Boast</span><span class="pv-classification-count">${bhBoast}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Volley</span><span class="pv-classification-count">${bhVolley}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="pv-heatmaps-grid">
+            <div class="pv-heatmap-item">
+              <div class="pv-heatmap-header">
+                <span class="pv-heatmap-title">Court Position</span>
+                <span class="pv-heatmap-badge player">Player</span>
+              </div>
+              <div class="pv-heatmap-container">
+                ${positionHeatmapSvg}
+              </div>
+            </div>
+            
+            <div class="pv-heatmap-item">
+              <div class="pv-heatmap-header">
+                <span class="pv-heatmap-title">Front Wall Targets</span>
+                <span class="pv-heatmap-badge ball">Ball</span>
+              </div>
+              <div class="pv-heatmap-frontwall">
+                ${frontWallHeatmapSvg}
+              </div>
+            </div>
+            
+            <div class="pv-heatmap-item">
+              <div class="pv-heatmap-header">
+                <span class="pv-heatmap-title">Floor Bounce Locations</span>
+                <span class="pv-heatmap-badge ball">Ball</span>
+              </div>
+              <div class="pv-heatmap-container">
+                ${floorBounceHeatmapSvg}
+              </div>
+            </div>
+          </div>
+          
+          <div class="pv-heatmap-legend">
+            <div class="pv-legend-item"><div class="pv-legend-dot player"></div><span>Player</span></div>
+            <div class="pv-legend-item"><div class="pv-legend-dot ball"></div><span>Ball</span></div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Start loading match overview after points are loaded
+    setTimeout(() => loadMatchOverview(), 1000);
+    
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return m + ":" + s.toString().padStart(2, "0");
+    }
+    
+    function renderPointsList() {
+      pvList.innerHTML = points.map((p, i) => {
+        const nextPoint = points[i + 1];
+        const endTime = nextPoint ? nextPoint.timestamp_sec : (pvVideo.duration || p.timestamp_sec + 30);
+        const duration = (endTime - p.timestamp_sec).toFixed(1);
+        
+        return `<div class="pv-point-item" data-index="${i}" data-point-number="${p.point_number}">
+          <div class="pv-point-header">
+            <div class="pv-point-header-left">
+              <span class="pv-point-label">Point ${p.point_number}</span>
+              <span class="pv-point-time" data-time="${p.timestamp_sec}">${formatTime(p.timestamp_sec)}</span>
+            </div>
+            <div class="pv-point-header-right">
+              <span class="pv-point-duration">${duration}s</span>
+              <span class="pv-expand-icon">▼</span>
+            </div>
+          </div>
+          <div class="pv-point-stats" id="pv-stats-${p.point_number}">
+            <div style="text-align:center;color:var(--text-dim);padding:20px;">Loading stats...</div>
+          </div>
+        </div>`;
+      }).join("");
+      
+      // Add click handlers
+      pvList.querySelectorAll(".pv-point-header").forEach(header => {
+        header.addEventListener("click", (e) => {
+          const pointItem = header.parentElement;
+          const idx = parseInt(pointItem.dataset.index);
+          const pointNum = parseInt(pointItem.dataset.pointNumber);
+          
+          // Toggle expanded state
+          const wasExpanded = pointItem.classList.contains("expanded");
+          
+          // Collapse all others
+          pvList.querySelectorAll(".pv-point-item").forEach(item => item.classList.remove("expanded"));
+          
+          if (!wasExpanded) {
+            pointItem.classList.add("expanded");
+            loadPointRally(pointNum);
+          }
+          
+          // Update current point and go to video time
+          currentPointIndex = idx;
+          highlightCurrentPoint();
+        });
+      });
+      
+      // Add timestamp click handlers (jump to video without expanding)
+      pvList.querySelectorAll(".pv-point-time").forEach(timeEl => {
+        timeEl.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const time = parseFloat(timeEl.dataset.time);
+          pvVideo.currentTime = Math.max(0, time - 1);
+          pvVideo.play();
+        });
+      });
+    }
+    
+    // Cache for loaded point rallies
+    const pointRallyCache = {};
+    
+    async function loadPointRally(pointNum) {
+      const statsContainer = document.getElementById(`pv-stats-${pointNum}`);
+      if (!statsContainer) return;
+      
+      // Check cache first
+      if (pointRallyCache[pointNum]) {
+        renderPointStats(statsContainer, pointRallyCache[pointNum]);
+        return;
+      }
+      
+      try {
+        const r = await fetch(`${API}/api/points/${videoKey}/${pointNum}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        pointRallyCache[pointNum] = data;
+        renderPointStats(statsContainer, data);
+      } catch (e) {
+        console.error("Failed to load point rally:", e);
+        statsContainer.innerHTML = `<div style="text-align:center;color:var(--red);padding:20px;">Failed to load stats. <button onclick="loadPointRally(${pointNum})" style="color:var(--accent);background:none;border:none;cursor:pointer;text-decoration:underline;">Retry</button></div>`;
+      }
+    }
+    
+    function renderPointStats(container, data) {
+      const rally = data.rally || [];
+      const p1Name = data.player_1?.name || playerConfig.player_1?.name || "Player 1";
+      const p2Name = data.player_2?.name || playerConfig.player_2?.name || "Player 2";
+      
+      // Calculate stats per player
+      const p1Shots = rally.filter(s => s.hit_by === "player_1");
+      const p2Shots = rally.filter(s => s.hit_by === "player_2");
+      
+      const p1Forehand = p1Shots.filter(s => s.shot_type === "forehand");
+      const p1Backhand = p1Shots.filter(s => s.shot_type === "backhand");
+      const p2Forehand = p2Shots.filter(s => s.shot_type === "forehand");
+      const p2Backhand = p2Shots.filter(s => s.shot_type === "backhand");
+      
+      // Calculate distance (sum of position changes)
+      const p1Distance = calculateDistance(rally, "player_1");
+      const p2Distance = calculateDistance(rally, "player_2");
+      
+      // Determine winner (last shot hitter loses typically, but we'll mark last hitter for now)
+      const lastShot = rally[rally.length - 1];
+      const winner = lastShot?.hit_by === "player_1" ? p2Name : p1Name;
+      const winnerClass = lastShot?.hit_by === "player_1" ? "color:var(--blue)" : "color:var(--red)";
+      
+      // Generate heatmap data - positions
+      const p1Positions = rally.map(s => s.player_1_position).filter(p => p && p.x != null);
+      const p2Positions = rally.map(s => s.player_2_position).filter(p => p && p.x != null);
+      
+      // Collect front wall contacts and floor bounces per player
+      const p1FrontWall = p1Shots.map(s => s.front_wall_contact).filter(p => p && p.x != null);
+      const p2FrontWall = p2Shots.map(s => s.front_wall_contact).filter(p => p && p.x != null);
+      const p1FloorBounce = p1Shots.map(s => s.floor_bounce).filter(p => p && p.x != null);
+      const p2FloorBounce = p2Shots.map(s => s.floor_bounce).filter(p => p && p.x != null);
+      
+      container.innerHTML = `
+        <div class="pv-point-summary">
+          <div class="pv-summary-item">
+            <div class="pv-summary-label">Duration</div>
+            <div class="pv-summary-value" style="color:var(--accent)">${data.duration_sec || 0}s</div>
+          </div>
+          <div class="pv-summary-item">
+            <div class="pv-summary-label">Total Shots</div>
+            <div class="pv-summary-value">${rally.length}</div>
+          </div>
+          <div class="pv-summary-item">
+            <div class="pv-summary-label">Winner</div>
+            <div class="pv-summary-value" style="${winnerClass}">${winner}</div>
+          </div>
+        </div>
+        
+        <div class="pv-players-comparison">
+          ${renderPlayerStats("p1", p1Name, p1Distance, p1Shots.length, p1Forehand, p1Backhand, p1Positions, p1FrontWall, p1FloorBounce, data.point_number)}
+          ${renderPlayerStats("p2", p2Name, p2Distance, p2Shots.length, p2Forehand, p2Backhand, p2Positions, p2FrontWall, p2FloorBounce, data.point_number)}
+        </div>
+      `;
+      
+      // Add shot category toggle handlers
+      container.querySelectorAll(".pv-shot-bar-row").forEach(row => {
+        row.addEventListener("click", () => {
+          const category = row.parentElement;
+          category.classList.toggle("expanded");
+          row.classList.toggle("expanded");
+        });
+      });
+    }
+    
+    function calculateDistance(rally, player) {
+      let totalDist = 0;
+      const posKey = player === "player_1" ? "player_1_position" : "player_2_position";
+      
+      for (let i = 1; i < rally.length; i++) {
+        const prev = rally[i-1][posKey];
+        const curr = rally[i][posKey];
+        if (prev && curr && prev.x != null && curr.x != null) {
+          const dx = (curr.x || 0) - (prev.x || 0);
+          const dy = (curr.y || 0) - (prev.y || 0);
+          totalDist += Math.sqrt(dx*dx + dy*dy);
+        }
+      }
+      return totalDist.toFixed(1);
+    }
+    
+    function renderPlayerStats(playerClass, name, distance, totalShots, forehands, backhands, positions, frontWallHits, floorBounces, pointNum) {
+      const fhCount = forehands.length;
+      const bhCount = backhands.length;
+      const maxShots = Math.max(fhCount, bhCount, 1);
+      const fhPct = (fhCount / maxShots) * 100;
+      const bhPct = (bhCount / maxShots) * 100;
+      
+      // Count shot classifications
+      const fhDrive = forehands.filter(s => s.shot_class === "drive").length;
+      const fhDrop = forehands.filter(s => s.shot_class === "drop").length;
+      const fhBoast = forehands.filter(s => s.shot_class === "boast").length;
+      const fhVolley = forehands.filter(s => s.shot_class === "volley").length;
+      
+      const bhDrive = backhands.filter(s => s.shot_class === "drive").length;
+      const bhDrop = backhands.filter(s => s.shot_class === "drop").length;
+      const bhBoast = backhands.filter(s => s.shot_class === "boast").length;
+      const bhVolley = backhands.filter(s => s.shot_class === "volley").length;
+      
+      // Generate all three heatmap SVGs
+      const positionHeatmapId = `heatmap-pos-${playerClass}-pt${pointNum}`;
+      const frontWallHeatmapId = `heatmap-fw-${playerClass}-pt${pointNum}`;
+      const floorBounceHeatmapId = `heatmap-fl-${playerClass}-pt${pointNum}`;
+      
+      const positionHeatmapSvg = generateHeatmapSvg(positions, positionHeatmapId);
+      const frontWallHeatmapSvg = generateFrontWallHeatmapSvg(frontWallHits, frontWallHeatmapId);
+      const floorBounceHeatmapSvg = generateFloorBounceHeatmapSvg(floorBounces, floorBounceHeatmapId);
+      
+      return `
+        <div class="pv-player-stats ${playerClass}">
+          <div class="pv-player-header">
+            <div class="pv-player-dot"></div>
+            <span class="pv-player-name">${name}</span>
+          </div>
+          
+          <div class="pv-stats-grid">
+            <div class="pv-stat-box">
+              <div class="pv-stat-value">${distance}m</div>
+              <div class="pv-stat-label">Distance</div>
+            </div>
+            <div class="pv-stat-box">
+              <div class="pv-stat-value">${totalShots}</div>
+              <div class="pv-stat-label">Shots</div>
+            </div>
+          </div>
+          
+          <div class="pv-shot-breakdown">
+            <div class="pv-shot-breakdown-title">Shot Breakdown</div>
+            
+            <div class="pv-shot-category">
+              <div class="pv-shot-bar-row">
+                <span class="pv-shot-bar-label">Forehand</span>
+                <div class="pv-shot-bar-track">
+                  <div class="pv-shot-bar-fill forehand" style="width:${fhPct}%"></div>
+                </div>
+                <span class="pv-shot-bar-count">${fhCount}</span>
+                <span class="pv-shot-expand-icon">▼</span>
+              </div>
+              <div class="pv-shot-classification">
+                <div class="pv-classification-grid">
+                  <div class="pv-classification-item"><span class="pv-classification-name">Drive</span><span class="pv-classification-count">${fhDrive}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Drop</span><span class="pv-classification-count">${fhDrop}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Boast</span><span class="pv-classification-count">${fhBoast}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Volley</span><span class="pv-classification-count">${fhVolley}</span></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="pv-shot-category">
+              <div class="pv-shot-bar-row">
+                <span class="pv-shot-bar-label">Backhand</span>
+                <div class="pv-shot-bar-track">
+                  <div class="pv-shot-bar-fill backhand" style="width:${bhPct}%"></div>
+                </div>
+                <span class="pv-shot-bar-count">${bhCount}</span>
+                <span class="pv-shot-expand-icon">▼</span>
+              </div>
+              <div class="pv-shot-classification">
+                <div class="pv-classification-grid">
+                  <div class="pv-classification-item"><span class="pv-classification-name">Drive</span><span class="pv-classification-count">${bhDrive}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Drop</span><span class="pv-classification-count">${bhDrop}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Boast</span><span class="pv-classification-count">${bhBoast}</span></div>
+                  <div class="pv-classification-item"><span class="pv-classification-name">Volley</span><span class="pv-classification-count">${bhVolley}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="pv-heatmaps-grid">
+            <div class="pv-heatmap-item">
+              <div class="pv-heatmap-header">
+                <span class="pv-heatmap-title">Court Position</span>
+                <span class="pv-heatmap-badge player">Player</span>
+              </div>
+              <div class="pv-heatmap-container">
+                ${positionHeatmapSvg}
+              </div>
+            </div>
+            
+            <div class="pv-heatmap-item">
+              <div class="pv-heatmap-header">
+                <span class="pv-heatmap-title">Front Wall Targets</span>
+                <span class="pv-heatmap-badge ball">Ball</span>
+              </div>
+              <div class="pv-heatmap-frontwall">
+                ${frontWallHeatmapSvg}
+              </div>
+            </div>
+            
+            <div class="pv-heatmap-item">
+              <div class="pv-heatmap-header">
+                <span class="pv-heatmap-title">Floor Bounce Locations</span>
+                <span class="pv-heatmap-badge ball">Ball</span>
+              </div>
+              <div class="pv-heatmap-container">
+                ${floorBounceHeatmapSvg}
+              </div>
+            </div>
+          </div>
+          
+          <div class="pv-heatmap-legend">
+            <div class="pv-legend-item"><div class="pv-legend-dot player"></div><span>Player</span></div>
+            <div class="pv-legend-item"><div class="pv-legend-dot ball"></div><span>Ball</span></div>
+          </div>
+        </div>
+      `;
+    }
+    
+    function generateHeatmapSvg(positions, id) {
+      // Court dimensions: 6.4m x 9.75m
+      // ViewBox: 640 x 975 (scaled 100x)
+      
+      // Generate gradient definitions based on positions
+      let gradients = "";
+      let gradientRects = "";
+      
+      if (positions.length > 0) {
+        // Cluster positions to find hotspots
+        const clusters = clusterPositions(positions);
+        
+        clusters.forEach((cluster, i) => {
+          // Convert court coords (0-6.4, 0-9.75) to viewBox coords
+          const cx = ((cluster.x / 6.4) * 100).toFixed(0);
+          const cy = ((cluster.y / 9.75) * 100).toFixed(0);
+          const intensity = Math.min(0.9, 0.3 + cluster.weight * 0.3);
+          const radius = 20 + cluster.weight * 15;
+          
+          gradients += `
+            <radialGradient id="${id}-g${i}" cx="${cx}%" cy="${cy}%" r="${radius}%">
+              <stop offset="0%" stop-color="rgba(20, 70, 160, ${intensity})"/>
+              <stop offset="50%" stop-color="rgba(20, 70, 160, ${intensity * 0.4})"/>
+              <stop offset="100%" stop-color="rgba(20, 70, 160, 0)"/>
+            </radialGradient>
+          `;
+          gradientRects += `<rect x="0" y="0" width="640" height="975" fill="url(#${id}-g${i})"/>`;
+        });
+      } else {
+        // Default single gradient if no positions
+        gradients = `
+          <radialGradient id="${id}-default" cx="50%" cy="70%" r="30%">
+            <stop offset="0%" stop-color="rgba(20, 70, 160, 0.5)"/>
+            <stop offset="100%" stop-color="rgba(20, 70, 160, 0)"/>
+          </radialGradient>
+        `;
+        gradientRects = `<rect x="0" y="0" width="640" height="975" fill="url(#${id}-default)"/>`;
+      }
+      
+      return `
+        <svg viewBox="0 0 640 975" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <defs>${gradients}</defs>
+          ${gradientRects}
+          
+          <!-- Court outline -->
+          <rect x="10" y="10" width="620" height="955" fill="none" stroke="#404040" stroke-width="8"/>
+          
+          <!-- Short line -->
+          <line x1="10" y1="549" x2="630" y2="549" stroke="#404040" stroke-width="5"/>
+          
+          <!-- Half court line -->
+          <line x1="320" y1="549" x2="320" y2="965" stroke="#404040" stroke-width="5"/>
+          
+          <!-- Left service box -->
+          <line x1="10" y1="709" x2="170" y2="709" stroke="#404040" stroke-width="5"/>
+          <line x1="170" y1="549" x2="170" y2="709" stroke="#404040" stroke-width="5"/>
+          
+          <!-- Right service box -->
+          <line x1="470" y1="549" x2="470" y2="709" stroke="#404040" stroke-width="5"/>
+          <line x1="470" y1="709" x2="630" y2="709" stroke="#404040" stroke-width="5"/>
+        </svg>
+      `;
+    }
+    
+    function generateFrontWallHeatmapSvg(frontWallHits, id) {
+      // Front wall dimensions: 6.4m wide x 4.57m high
+      // ViewBox: 640 x 457 (scaled 100x)
+      // Service line at 1.83m from floor, Tin at 0.43m from floor
+      
+      let gradients = "";
+      let gradientRects = "";
+      
+      if (frontWallHits.length > 0) {
+        // Cluster front wall positions
+        const clusters = clusterFrontWallPositions(frontWallHits);
+        
+        clusters.forEach((cluster, i) => {
+          // Convert wall coords (x: 0-6.4, y: 0-4.57) to viewBox coords
+          // x maps directly, y is inverted (0 at bottom, 4.57 at top)
+          const cx = ((cluster.x / 6.4) * 100).toFixed(0);
+          const cy = (100 - (cluster.y / 4.57) * 100).toFixed(0);
+          const intensity = Math.min(0.9, 0.3 + cluster.weight * 0.35);
+          const radius = 18 + cluster.weight * 15;
+          
+          gradients += `
+            <radialGradient id="${id}-g${i}" cx="${cx}%" cy="${cy}%" r="${radius}%">
+              <stop offset="0%" stop-color="rgba(230, 126, 34, ${intensity})"/>
+              <stop offset="50%" stop-color="rgba(230, 126, 34, ${intensity * 0.4})"/>
+              <stop offset="100%" stop-color="rgba(230, 126, 34, 0)"/>
+            </radialGradient>
+          `;
+          gradientRects += `<rect x="0" y="0" width="640" height="457" fill="url(#${id}-g${i})"/>`;
+        });
+      } else {
+        // Default gradient if no data
+        gradients = `
+          <radialGradient id="${id}-default" cx="50%" cy="50%" r="35%">
+            <stop offset="0%" stop-color="rgba(230, 126, 34, 0.4)"/>
+            <stop offset="100%" stop-color="rgba(230, 126, 34, 0)"/>
+          </radialGradient>
+        `;
+        gradientRects = `<rect x="0" y="0" width="640" height="457" fill="url(#${id}-default)"/>`;
+      }
+      
+      // Service line: 1.83m from floor = 40% from bottom = 60% from top
+      // Tin: 0.43m from floor = 9.4% from bottom = 90.6% from top
+      const serviceLineY = 457 - (1.83 / 4.57 * 457); // ~275
+      const tinLineY = 457 - (0.43 / 4.57 * 457); // ~414
+      
+      return `
+        <svg viewBox="0 0 640 457" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <defs>${gradients}</defs>
+          <rect x="0" y="0" width="640" height="457" fill="#f8f8f8"/>
+          ${gradientRects}
+          
+          <!-- Front wall outline -->
+          <rect x="10" y="10" width="620" height="437" fill="none" stroke="#404040" stroke-width="8"/>
+          
+          <!-- Service line (solid red) -->
+          <line x1="10" y1="${serviceLineY.toFixed(0)}" x2="630" y2="${serviceLineY.toFixed(0)}" stroke="#e53935" stroke-width="4"/>
+          
+          <!-- Tin line (solid red) -->
+          <line x1="10" y1="${tinLineY.toFixed(0)}" x2="630" y2="${tinLineY.toFixed(0)}" stroke="#e53935" stroke-width="6"/>
+        </svg>
+      `;
+    }
+    
+    function generateFloorBounceHeatmapSvg(floorBounces, id) {
+      // Same court dimensions as position heatmap: 6.4m x 9.75m
+      // But using orange color for ball
+      
+      let gradients = "";
+      let gradientRects = "";
+      
+      if (floorBounces.length > 0) {
+        const clusters = clusterPositions(floorBounces);
+        
+        clusters.forEach((cluster, i) => {
+          const cx = ((cluster.x / 6.4) * 100).toFixed(0);
+          const cy = ((cluster.y / 9.75) * 100).toFixed(0);
+          const intensity = Math.min(0.9, 0.3 + cluster.weight * 0.35);
+          const radius = 18 + cluster.weight * 15;
+          
+          gradients += `
+            <radialGradient id="${id}-g${i}" cx="${cx}%" cy="${cy}%" r="${radius}%">
+              <stop offset="0%" stop-color="rgba(230, 126, 34, ${intensity})"/>
+              <stop offset="50%" stop-color="rgba(230, 126, 34, ${intensity * 0.4})"/>
+              <stop offset="100%" stop-color="rgba(230, 126, 34, 0)"/>
+            </radialGradient>
+          `;
+          gradientRects += `<rect x="0" y="0" width="640" height="975" fill="url(#${id}-g${i})"/>`;
+        });
+      } else {
+        gradients = `
+          <radialGradient id="${id}-default" cx="50%" cy="70%" r="30%">
+            <stop offset="0%" stop-color="rgba(230, 126, 34, 0.4)"/>
+            <stop offset="100%" stop-color="rgba(230, 126, 34, 0)"/>
+          </radialGradient>
+        `;
+        gradientRects = `<rect x="0" y="0" width="640" height="975" fill="url(#${id}-default)"/>`;
+      }
+      
+      return `
+        <svg viewBox="0 0 640 975" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <defs>${gradients}</defs>
+          ${gradientRects}
+          
+          <!-- Court outline -->
+          <rect x="10" y="10" width="620" height="955" fill="none" stroke="#404040" stroke-width="8"/>
+          
+          <!-- Short line -->
+          <line x1="10" y1="549" x2="630" y2="549" stroke="#404040" stroke-width="5"/>
+          
+          <!-- Half court line -->
+          <line x1="320" y1="549" x2="320" y2="965" stroke="#404040" stroke-width="5"/>
+          
+          <!-- Left service box -->
+          <line x1="10" y1="709" x2="170" y2="709" stroke="#404040" stroke-width="5"/>
+          <line x1="170" y1="549" x2="170" y2="709" stroke="#404040" stroke-width="5"/>
+          
+          <!-- Right service box -->
+          <line x1="470" y1="549" x2="470" y2="709" stroke="#404040" stroke-width="5"/>
+          <line x1="470" y1="709" x2="630" y2="709" stroke="#404040" stroke-width="5"/>
+        </svg>
+      `;
+    }
+    
+    function clusterFrontWallPositions(positions) {
+      // Clustering for front wall - different grid since wall is smaller
+      const clusters = [];
+      const gridSizeX = 1.0; // 1m horizontal grid
+      const gridSizeY = 0.75; // 0.75m vertical grid
+      const grid = {};
+      
+      positions.forEach(pos => {
+        if (pos.x == null || pos.y == null) return;
+        const gx = Math.floor(pos.x / gridSizeX);
+        const gy = Math.floor(pos.y / gridSizeY);
+        const key = `${gx},${gy}`;
+        if (!grid[key]) {
+          grid[key] = { x: 0, y: 0, count: 0 };
+        }
+        grid[key].x += pos.x;
+        grid[key].y += pos.y;
+        grid[key].count++;
+      });
+      
+      const maxCount = Math.max(...Object.values(grid).map(g => g.count), 1);
+      
+      Object.values(grid).forEach(g => {
+        clusters.push({
+          x: g.x / g.count,
+          y: g.y / g.count,
+          weight: g.count / maxCount
+        });
+      });
+      
+      return clusters.sort((a, b) => b.weight - a.weight).slice(0, 5);
+    }
+    
+    function clusterPositions(positions) {
+      // Simple clustering - group nearby positions
+      const clusters = [];
+      const gridSize = 1.5; // 1.5m grid
+      const grid = {};
+      
+      positions.forEach(pos => {
+        if (pos.x == null || pos.y == null) return;
+        const gx = Math.floor(pos.x / gridSize);
+        const gy = Math.floor(pos.y / gridSize);
+        const key = `${gx},${gy}`;
+        if (!grid[key]) {
+          grid[key] = { x: 0, y: 0, count: 0 };
+        }
+        grid[key].x += pos.x;
+        grid[key].y += pos.y;
+        grid[key].count++;
+      });
+      
+      const maxCount = Math.max(...Object.values(grid).map(g => g.count), 1);
+      
+      Object.values(grid).forEach(g => {
+        clusters.push({
+          x: g.x / g.count,
+          y: g.y / g.count,
+          weight: g.count / maxCount
+        });
+      });
+      
+      // Sort by weight and take top 4
+      return clusters.sort((a, b) => b.weight - a.weight).slice(0, 4);
+    }
+    
+    // Make loadPointRally available globally for retry buttons
+    window.loadPointRally = loadPointRally;
+    
+    function goToPoint(idx) {
+      pvVideo.currentTime = Math.max(0, points[idx].timestamp_sec - 1);
+      highlightCurrentPoint();
+      pvVideo.play();
+    }
+    
+    function highlightCurrentPoint() {
+      pvList.querySelectorAll(".pv-point-item").forEach((item, i) => {
+        const header = item.querySelector(".pv-point-header");
+        if (i === currentPointIndex) {
+          header.style.background = "linear-gradient(135deg, rgba(0,240,255,0.1), rgba(168,85,247,0.1))";
+        } else {
+          header.style.background = "";
+        }
+      });
+      const activeItem = pvList.querySelector(`.pv-point-item[data-index="${currentPointIndex}"]`);
+      if (activeItem) activeItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    
+    function updateButtons() {
+      pvPrev.disabled = currentPointIndex === 0;
+      pvNext.disabled = currentPointIndex === points.length - 1;
+    }
+    
+    pvVideo.addEventListener("play", () => { pvPlay.innerHTML = "⏸ Pause"; });
+    pvVideo.addEventListener("pause", () => { pvPlay.innerHTML = "▶ Play"; });
+    pvVideo.addEventListener("timeupdate", () => {
+      for (let i = points.length - 1; i >= 0; i--) {
+        if (pvVideo.currentTime >= points[i].timestamp_sec - 1) {
+          if (currentPointIndex !== i) { currentPointIndex = i; highlightCurrentPoint(); }
+          break;
+        }
+      }
+      updateButtons();
+    });
+    
+    pvPlay.addEventListener("click", () => { if (pvVideo.paused) pvVideo.play(); else pvVideo.pause(); });
+    pvPrev.addEventListener("click", () => { if (currentPointIndex > 0) { currentPointIndex--; goToPoint(currentPointIndex); } });
+    pvNext.addEventListener("click", () => { if (currentPointIndex < points.length - 1) { currentPointIndex++; goToPoint(currentPointIndex); } });
+    
+    let holdingSpace = false;
+    document.addEventListener("keydown", (e) => {
+      if (!$steps.results.classList.contains("active")) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        if (!pvVideo.paused && !holdingSpace) {
+          holdingSpace = true;
+          pvVideo.playbackRate = 2;
+          speedIndicator.classList.add("visible");
+        } else if (pvVideo.paused && !holdingSpace) {
+          pvVideo.play();
+        }
+      } else if (e.code === "ArrowLeft") { e.preventDefault(); pvPrev.click(); }
+      else if (e.code === "ArrowRight") { e.preventDefault(); pvNext.click(); }
+    });
+    
+    document.addEventListener("keyup", (e) => {
+      if (!$steps.results.classList.contains("active")) return;
+      if (e.code === "Space") {
+        if (holdingSpace) {
+          pvVideo.playbackRate = 1;
+          holdingSpace = false;
+          speedIndicator.classList.remove("visible");
+        } else if (!pvVideo.paused) {
+          pvVideo.pause();
+        }
+      }
+    });
+    
+  }, 1500);
+}
 </script>
 </body>
 </html>
