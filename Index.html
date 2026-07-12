@@ -4,6 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BoastIQ Player Tracker</title>
+<meta name="description" content="View your squash match on BoastIQ — AI-powered game recordings, insights, and stats.">
+
+<!-- Favicon + iOS / Android icons -->
+<link rel="icon" type="image/png" href="https://boast-iq.com/assets/logo.png">
+<link rel="shortcut icon" type="image/png" href="https://boast-iq.com/assets/logo.png">
+<link rel="apple-touch-icon" href="https://boast-iq.com/assets/logo.png">
+<meta name="theme-color" content="#1A1A1C">
+
+<!-- Open Graph (iMessage, Slack, Facebook, LinkedIn link previews) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Boast IQ">
+<meta property="og:title" content="View Your Match on BoastIQ">
+<meta property="og:description" content="You've been tagged in a squash match. Tap to view your match on BoastIQ.">
+<meta property="og:url" content="https://app.boast-iq.com">
+<meta property="og:image" content="https://boast-iq.com/assets/logo.png">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="1024">
+<meta property="og:image:alt" content="Boast IQ logo">
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="View Your Match on BoastIQ">
+<meta name="twitter:description" content="You've been tagged in a squash match. Tap to view your match on BoastIQ.">
+<meta name="twitter:image" content="https://boast-iq.com/assets/logo.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
   
@@ -105,6 +129,11 @@
     max-width: 900px;
     margin: 0 auto;
     padding: 40px 24px;
+  }
+  /* Results dashboard uses the full viewport width */
+  .container:has(#step-results.active) {
+    max-width: 1800px;
+    padding: 32px 32px;
   }
   
   /* Steps */
@@ -370,7 +399,82 @@
   }
   
   .form-input::placeholder { color: var(--text-dim); }
-  
+
+  .player-picker { position: relative; }
+  .player-picker-results {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px;
+  }
+  .player-picker-results.open { display: flex; }
+  .player-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .player-picker-row:hover { background: var(--surface-hover); }
+  .player-picker-row.disabled { opacity: 0.5; cursor: not-allowed; }
+  .player-picker-row-photo {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface-hover); object-fit: cover; flex-shrink: 0;
+  }
+  .player-picker-row-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .player-picker-row-name { font-size: 14px; color: var(--text); }
+  .player-picker-row-email { font-size: 11px; color: var(--text-dim); }
+  .player-picker-empty { color: var(--text-dim); font-size: 12px; padding: 10px; text-align: center; font-style: italic; }
+
+  .player-picker-chip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; margin-bottom: 10px;
+    background: var(--surface-hover); border: 1px solid var(--accent);
+    border-radius: 12px;
+  }
+  .player-picker-photo {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface); object-fit: cover; flex-shrink: 0;
+  }
+  .player-picker-meta { flex: 1; min-width: 0; }
+  .player-picker-name { font-size: 14px; color: var(--text); font-weight: 600; }
+  .player-picker-email { font-size: 11px; color: var(--text-dim); }
+  .player-picker-clear {
+    background: transparent; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 22px; line-height: 1; padding: 0 6px;
+  }
+  .player-picker-clear:hover { color: var(--text); }
+
+  .player-picker-actions { margin-top: 8px; display: flex; gap: 12px; }
+  .btn-link {
+    background: transparent; border: none; color: var(--accent);
+    font-family: 'Space Grotesk', sans-serif; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 0;
+  }
+  .btn-link:hover { text-decoration: underline; }
+
+  .player-picker-invite {
+    display: flex; gap: 8px; margin-top: 10px; align-items: stretch;
+  }
+  .player-picker-invite .form-input { flex: 1; font-size: 12px; padding: 10px 12px; }
+  .btn-sm { padding: 8px 14px; font-size: 12px; }
+
+  .upload-status-banner {
+    margin: 16px 0; padding: 12px 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; font-size: 13px; color: var(--text-dim);
+  }
+  .upload-status-banner.error { border-color: var(--red); color: var(--red); }
+  .upload-status-banner.ready { border-color: var(--accent); color: var(--text); }
+
   .hand-toggle { display: flex; gap: 10px; }
   
   .hand-btn {
@@ -443,15 +547,69 @@
     border: 1px solid var(--border);
     background: var(--surface);
     transition: all 0.3s ease;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
-  
+
   .point-badge.p1 { border-color: var(--red); color: var(--red); }
   .point-badge.p2 { border-color: var(--blue); color: var(--blue); }
-  .point-badge.set { 
+  .point-badge.set {
     opacity: 1;
     box-shadow: 0 0 20px rgba(var(--color), 0.3);
   }
-  .point-badge.unset { opacity: 0.4; }
+  .point-badge.unset { opacity: 0.5; }
+  /* Active = the player you're currently placing */
+  .point-badge.active {
+    opacity: 1;
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+    background: var(--surface-hover);
+  }
+
+  /* Select-players layout (stacks in portrait, splits in landscape) */
+  .select-layout { display: flex; flex-direction: column; gap: 20px; }
+  .select-controls { display: flex; flex-direction: column; gap: 18px; }
+  .select-controls .points-info { margin-top: 0; }
+
+  .rotate-hint {
+    display: none;
+    margin: 4px 0 14px;
+    padding: 12px 16px;
+    border: 1px dashed var(--border-bright);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--text-dim);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  @media (max-width: 820px) and (orientation: portrait) {
+    #step-select .rotate-hint { display: block; }
+  }
+
+  @media (max-width: 1024px) and (orientation: landscape) {
+    #step-select .select-layout {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 18px;
+    }
+    #step-select .frame-wrapper { flex: 1 1 auto; min-width: 0; }
+    #step-select .frame-container { display: flex; justify-content: center; }
+    #step-select .frame-container canvas {
+      max-height: 80vh;
+      width: auto;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+    #step-select .select-controls {
+      flex: 0 0 200px;
+      max-width: 200px;
+    }
+    #step-select .points-info { flex-direction: column; }
+    #step-select .point-badge { width: 100%; text-align: center; }
+  }
   
   /* Buttons */
   .btn {
@@ -838,6 +996,93 @@
   }
   
   .pv-point-item.expanded .pv-expand-icon { transform: rotate(180deg); }
+
+  .pv-star-btn {
+    background: none; border: 0; padding: 0;
+    color: var(--text-dim); font-size: 20px;
+    line-height: 1; cursor: pointer;
+    width: 28px; height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s, transform 0.1s;
+  }
+  .pv-star-btn:hover { background: rgba(255,255,255,0.06); color: #ffd76b; }
+  .pv-star-btn:active { transform: scale(0.92); }
+  .pv-star-btn.starred { color: #ffd76b; text-shadow: 0 0 8px rgba(255,215,107,0.5); }
+  .pv-point-item.starred { border-left: 2px solid #ffd76b; }
+
+  .pv-share-clip-btn {
+    background: rgba(88, 166, 255, 0.12);
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    color: var(--accent, #58a6ff);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .pv-share-clip-btn:hover { background: rgba(88, 166, 255, 0.22); border-color: rgba(88, 166, 255, 0.55); }
+  .pv-share-clip-btn:active { transform: scale(0.96); }
+  .pv-share-clip-btn:disabled { opacity: 0.65; cursor: wait; }
+
+  /* ===== Recipient-side clip viewer (no auth) ===== */
+  .clip-viewer-root {
+    position: fixed; inset: 0;
+    background: linear-gradient(180deg, #0a0d12 0%, #161b22 100%);
+    color: #e6edf3;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: auto;
+    z-index: 99999;
+  }
+  .clip-viewer-wrap {
+    max-width: 960px; margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  .clip-viewer-brand {
+    font-size: 14px; color: #8b949e;
+    letter-spacing: 0.5px; margin-bottom: 10px;
+  }
+  .clip-viewer-title {
+    font-size: 24px; font-weight: 600; margin: 0 0 6px;
+  }
+  .clip-viewer-meta {
+    color: #8b949e; font-size: 13px; margin-bottom: 24px;
+  }
+  .clip-viewer-video {
+    width: 100%; max-width: 960px; border-radius: 10px;
+    background: #000; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    display: block;
+  }
+  .clip-viewer-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px; margin-top: 22px;
+  }
+  .clip-viewer-stat {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .clip-viewer-stat-label {
+    font-size: 11px; color: #8b949e; text-transform: uppercase;
+    letter-spacing: 0.4px; margin-bottom: 4px;
+  }
+  .clip-viewer-stat-value {
+    font-size: 18px; font-weight: 600;
+  }
+  .clip-viewer-status {
+    text-align: center; padding: 60px 20px; color: #8b949e;
+  }
+  .clip-viewer-footer {
+    margin-top: 32px; padding-top: 16px;
+    border-top: 1px solid #30363d;
+    font-size: 12px; color: #8b949e;
+    text-align: center;
+  }
+  .clip-viewer-footer a { color: #58a6ff; text-decoration: none; }
   
   .pv-point-stats {
     display: none;
@@ -1281,6 +1526,935 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+
+  /* Header right group */
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* User info (top right when signed in) */
+  .user-info {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .user-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(12px);
+  }
+
+  .user-avatar:hover,
+  .user-avatar[aria-expanded="true"] {
+    border-color: var(--border-bright);
+  }
+
+  .user-photo {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface-hover);
+    display: block;
+  }
+
+  .user-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    background: rgba(15, 15, 20, 0.98);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    z-index: 200;
+  }
+
+  .user-dropdown[hidden] {
+    display: none;
+  }
+
+  .user-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .btn-signout {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    background: var(--surface-hover);
+    color: var(--text-dim);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+
+  .btn-signout:hover {
+    color: var(--text);
+    border-color: var(--border-bright);
+    background: var(--surface);
+  }
+
+  /* Login overlay */
+  .login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 5, 8, 0.85);
+    backdrop-filter: blur(20px);
+    padding: 24px;
+    animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .login-overlay.hidden { display: none; }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--purple), var(--blue), var(--accent));
+  }
+
+  .login-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .login-desc {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .btn-google {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 14px 24px;
+    border: 1px solid var(--border-bright);
+    background: #fff;
+    color: #1a1a1a;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-google:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
+  }
+
+  .btn-google:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Header left group + back button */
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .btn-back,
+  .btn-header {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    height: 36px;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-back:hover {
+    color: var(--text);
+    border-color: var(--border-bright);
+    background: var(--surface-hover);
+  }
+
+  .btn-header:hover {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  /* My Videos */
+  .videos-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .videos-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .coach-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+    margin-top: 14px;
+  }
+
+  .coach-result-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .coach-result-row:hover {
+    background: var(--surface-hover);
+    border-color: var(--accent);
+    transform: translateX(2px);
+  }
+
+  .coach-result-row.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .coach-result-row.disabled:hover {
+    transform: none;
+    border-color: var(--border);
+    background: var(--surface);
+  }
+
+  .coach-result-tag {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--surface-hover);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  .coach-empty {
+    color: var(--text-dim);
+    font-size: 13px;
+    padding: 14px 0;
+    text-align: center;
+    font-style: italic;
+  }
+
+  .btn-coach-toggle {
+    width: 100%;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    padding: 12px 16px;
+    border: 1px dashed var(--border-bright);
+    background: var(--surface-hover);
+    color: var(--text);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-coach-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    border-style: solid;
+  }
+
+  .videos-loading {
+    text-align: center;
+    color: var(--text-dim);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    padding: 60px 20px;
+  }
+
+  .videos-empty {
+    text-align: center;
+    padding: 80px 20px;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
+  }
+
+  .videos-empty-icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  .videos-empty-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .videos-empty-desc {
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  .videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .video-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(12px);
+  }
+
+  .video-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-bright);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .video-card-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--surface-hover) center/cover no-repeat;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 32px;
+  }
+
+  .video-card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .video-card-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+  }
+
+  .video-card-status.uploading { color: var(--yellow); border-color: var(--yellow); }
+  .video-card-status.ready { color: var(--accent); border-color: var(--accent); }
+  .video-card-status.processing { color: var(--purple); border-color: var(--purple); }
+  .video-card-status.complete { color: var(--green); border-color: var(--green); }
+  .video-card-status.failed { color: var(--red); border-color: var(--red); }
+
+  .video-card-body {
+    padding: 14px 16px 16px;
+  }
+
+  .video-card-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .video-card-meta {
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .video-card-share-btn {
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .video-card-share-btn:hover {
+    color: var(--text);
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .video-card-shared-tag {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 10px;
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    color: var(--purple);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 5, 8, 0.78);
+    backdrop-filter: blur(20px);
+    padding: 24px;
+    animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .modal-card {
+    background: var(--surface-solid);
+    border: 1px solid var(--border-bright);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 520px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    position: relative;
+  }
+
+  .modal-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--purple), var(--blue), var(--accent));
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .modal-title-em {
+    color: var(--accent);
+    font-weight: 500;
+    max-width: 280px;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 6px;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover { color: var(--text); }
+
+  .share-section {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .share-section:last-child { border-bottom: none; }
+
+  .share-link-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .share-link-row .form-input {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-radius: 10px;
+    font-family: 'Space Grotesk', monospace;
+    color: var(--accent);
+    background: var(--surface);
+  }
+
+  .share-link-row .btn {
+    padding: 10px 18px;
+    font-size: 13px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+
+  .share-link-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .share-add-row {
+    display: grid;
+    grid-template-columns: 1fr 160px auto;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .share-add-row .form-input {
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 10px;
+  }
+
+  .share-add-row .btn {
+    padding: 10px 18px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .share-role-select {
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-dim) 50%), linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 32px;
+  }
+
+  .share-msg {
+    margin-top: 10px;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+
+  .share-msg.error {
+    background: rgba(240, 80, 80, 0.1);
+    border: 1px solid var(--red);
+    color: var(--red);
+  }
+
+  .share-msg.success {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid var(--green);
+    color: var(--green);
+  }
+
+  .share-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+
+  .share-empty {
+    color: var(--text-dim);
+    font-size: 13px;
+    font-style: italic;
+    padding: 8px 0;
+  }
+
+  .share-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .share-row-photo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface-hover);
+    flex-shrink: 0;
+  }
+
+  .share-row-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .share-row-name {
+    font-size: 13px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .share-row-email {
+    font-size: 11px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .share-row-role {
+    appearance: none;
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    padding: 5px 24px 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-dim) 50%), linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+    background-position: calc(100% - 12px) 50%, calc(100% - 8px) 50%;
+    background-size: 4px 4px;
+    background-repeat: no-repeat;
+  }
+
+  .share-row-remove {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .share-row-remove:hover {
+    color: var(--red);
+    border-color: var(--red);
+  }
+
+  .share-row-owner-tag {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+
+  /* ===== Dashboard (#step-results) ===== */
+  .dash-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin: 8px 0 20px;
+  }
+  .dash-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 700; line-height: 1.2;
+    color: var(--text); margin-top: 4px;
+  }
+  .dash-meta { color: var(--text-dim); font-size: 13px; }
+  .dash-meta kbd {
+    background: var(--bg-elev-2, rgba(255,255,255,0.06));
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px; padding: 1px 6px; font-size: 11px;
+    font-family: 'Space Grotesk', monospace;
+    margin: 0 2px;
+  }
+
+  .dashboard {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 20px;
+  }
+  .dash-left { display: flex; flex-direction: column; gap: 20px; min-width: 0; min-height: 0; }
+  .dash-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; min-height: 0; }
+  .dash-right > .dash-panel:first-child { flex: 1.2 1 0; min-height: 0; display: flex; flex-direction: column; }
+  .dash-right > .dash-shots-row { flex: 1 1 0; min-height: 0; }
+  .dash-shots-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .dash-shots-row > .dash-panel { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+  .dash-panel > .dash-svg-host { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  .dash-panel > .dash-svg-host > svg { display: block; width: 100%; height: 100%; }
+
+  .dash-panel {
+    background: var(--bg-card, rgba(255,255,255,0.03));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 16px;
+    min-width: 0;
+  }
+  .dash-panel-h {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; row-gap: 8px; column-gap: 12px;
+    margin-bottom: 12px;
+  }
+  .dash-right .dash-panel > .dash-panel-h .dash-shot-filter {
+    flex-basis: 100%;
+  }
+  .dash-panel-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .dash-viewer-panel { padding: 0; overflow: hidden; }
+  .dash-viewer-frame {
+    aspect-ratio: 16 / 9; background: #000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dash-viewer-frame { position: relative; }
+  .dash-viewer-frame video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
+  .dash-viewer-star {
+    position: absolute; top: 12px; right: 12px;
+    width: 40px; height: 40px;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    color: #fff; font-size: 22px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; user-select: none;
+    transition: transform 0.12s, background 0.15s, color 0.15s, border-color 0.15s;
+    z-index: 2;
+  }
+  .dash-viewer-star:hover { background: rgba(0,0,0,0.75); color: #ffd76b; border-color: rgba(255,215,107,0.5); }
+  .dash-viewer-star:active { transform: scale(0.92); }
+  .dash-viewer-star.starred { color: #ffd76b; text-shadow: 0 0 10px rgba(255,215,107,0.7); border-color: rgba(255,215,107,0.5); }
+  .dash-scrub-row {
+    padding: 10px 16px 6px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .dash-scrub {
+    width: 100%; height: 6px;
+    -webkit-appearance: none; appearance: none;
+    background: rgba(255,255,255,0.08);
+    border-radius: 999px; outline: none;
+    cursor: pointer;
+  }
+  .dash-scrub::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--accent); border: 2px solid #000;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(0,240,255,0.6);
+    transition: transform 0.1s;
+  }
+  .dash-scrub::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  .dash-scrub::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--accent); border: 2px solid #000;
+    cursor: pointer;
+  }
+  .dash-viewer-controls {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px 12px;
+    flex-wrap: wrap;
+  }
+  .dash-viewer-controls .btn { padding: 8px 14px; font-size: 13px; }
+  .dash-time {
+    margin-left: auto;
+    font-family: 'Space Grotesk', monospace;
+    color: var(--text-dim); font-variant-numeric: tabular-nums;
+    font-size: 13px;
+  }
+
+  .dash-svg-host { display: block; }
+  .dash-svg-host svg { display: block; margin: 0 auto; }
+  .dash-svg-tall svg { width: 100%; max-width: 360px; height: auto; }
+  .dash-svg-wide svg { width: 100%; height: auto; }
+  .dash-svg-half svg { width: 100%; max-width: 220px; height: auto; }
+
+  .dash-shot-filter { display: flex; gap: 10px; flex-wrap: wrap; }
+  .dash-shot-filter label {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--text-dim); cursor: pointer;
+    user-select: none; max-width: 100%;
+  }
+  .dash-shot-filter label span:last-child {
+    max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .dash-shot-filter input { accent-color: var(--accent); cursor: pointer; margin: 0; }
+  .dash-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dash-dot-p1 { background: var(--blue, #00f0ff); }
+  .dash-dot-p2 { background: var(--red, #ff2e93); }
+
+  .dash-stats-toggle {
+    display: inline-flex;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px; padding: 2px;
+  }
+  .dash-stats-toggle button {
+    background: none; border: 0; color: var(--text-dim);
+    padding: 6px 12px; border-radius: 6px;
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .dash-stats-toggle button.active { background: var(--accent); color: #000; }
+
+  .dash-stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+  .dash-stat-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 14px;
+  }
+  .dash-stat-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-dim); margin-bottom: 6px;
+  }
+  .dash-stat-rows { display: flex; flex-direction: column; gap: 4px; }
+  .dash-stat-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; gap: 8px; min-width: 0;
+  }
+  .dash-stat-name {
+    display: flex; align-items: center; gap: 6px; color: var(--text-dim);
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .dash-stat-value {
+    font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text);
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .dash-stat-value-big { font-size: 22px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: var(--text); }
+
+  .dash-loading {
+    color: var(--text-dim); font-size: 13px;
+    padding: 24px; text-align: center;
+  }
+
+  .dash-notes-pane { display: flex; flex-direction: column; gap: 10px; }
+  .dash-notes-header {
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--text-dim); font-size: 12px;
+  }
+  .dash-notes-textarea {
+    width: 100%; min-height: 140px; resize: vertical;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 12px;
+    color: var(--text); font-family: inherit; font-size: 13px; line-height: 1.5;
+    transition: border-color 0.15s;
+  }
+  .dash-notes-textarea:focus { outline: none; border-color: var(--accent); }
+  .dash-notes-status { font-size: 11px; color: var(--text-dim); font-style: italic; }
+
+  /* Court SVG style hooks (dark theme) */
+  .dash-court-line { stroke: rgba(255,255,255,0.25); stroke-width: 1.5; fill: none; }
+  .dash-court-bg { fill: rgba(0,240,255,0.02); }
+  .dash-tin { fill: rgba(255,46,147,0.15); stroke: rgba(255,46,147,0.4); }
+  .dash-trail-p1 { stroke: var(--blue, #00f0ff); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .dash-trail-p2 { stroke: var(--red, #ff2e93); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .dash-head-p1 { fill: var(--blue, #00f0ff); filter: drop-shadow(0 0 8px var(--blue, #00f0ff)); }
+  .dash-head-p2 { fill: var(--red, #ff2e93); filter: drop-shadow(0 0 8px var(--red, #ff2e93)); }
+
+  @media (max-width: 1100px) {
+    .dashboard { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -1289,21 +2463,144 @@
 <div class="speed-indicator" id="speed-indicator">⚡ 2x Speed</div>
 
 <div class="header">
-  <h1>BoastIQ Tracker</h1>
-  <div class="badge">SAM2 · A100-80GB</div>
+  <div class="header-left">
+    <h1>BoastIQ Tracker</h1>
+    <button class="btn-back" id="btn-back-to-videos" style="display:none;">← My Videos</button>
+  </div>
+  <div class="header-right">
+    <button class="btn-header" id="btn-manage-coach" style="display:none;">Manage Coach</button>
+    <div class="user-info" id="user-info" style="display:none;">
+      <button class="user-avatar" id="user-avatar" aria-label="Account menu" aria-expanded="false">
+        <img class="user-photo" id="user-photo" alt="">
+      </button>
+      <div class="user-dropdown" id="user-dropdown" hidden>
+        <span class="user-name" id="user-name"></span>
+        <button class="btn-signout" id="btn-signout" title="Sign out">Sign out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Coach modal (hidden by default) -->
+<div id="coach-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title" id="coach-modal-title">Manage Coach</h3>
+      <button class="modal-close" id="btn-close-coach" aria-label="Close">×</button>
+    </div>
+
+    <!-- Main view -->
+    <div id="coach-view-main">
+      <div class="share-section" id="coach-current-section" style="display:none;">
+        <div class="form-label">Your coach</div>
+        <div class="share-row" id="coach-current-row"></div>
+      </div>
+
+      <div class="share-section">
+        <div class="form-label" id="coach-search-label">Find a coach by name</div>
+        <div class="share-link-row">
+          <input type="text" class="form-input" id="coach-search-input" placeholder="Start typing a name...">
+        </div>
+        <div class="share-link-hint">Click someone to make them your coach — they'll get read + write access to every video you own (including future uploads).</div>
+        <div class="share-msg" id="coach-msg" style="display:none;"></div>
+        <div class="coach-results" id="coach-results"></div>
+      </div>
+
+      <div class="share-section">
+        <button class="btn-coach-toggle" id="btn-i-am-coach">I am a coach →</button>
+      </div>
+    </div>
+
+    <!-- "I am a coach" view -->
+    <div id="coach-view-share" style="display:none;">
+      <div class="share-section">
+        <div class="form-label">Your coach link</div>
+        <div class="share-link-row">
+          <input type="text" class="form-input" id="coach-link-input" readonly>
+          <button class="btn btn-primary" id="btn-coach-link-copy">Copy</button>
+        </div>
+        <div class="share-link-hint">Send this link to anyone you coach. After they sign in with Google, you'll be set as their coach and get read + write access to all of their videos.</div>
+        <div class="share-msg" id="coach-link-msg" style="display:none;"></div>
+      </div>
+
+      <div class="share-section">
+        <button class="btn-coach-toggle" id="btn-coach-back">← Back to Manage Coach</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Share modal (hidden by default) -->
+<div id="share-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">Share <span id="share-video-title" class="modal-title-em"></span></h3>
+      <button class="modal-close" id="btn-close-share" aria-label="Close">×</button>
+    </div>
+
+    <div class="share-section">
+      <div class="form-label">Share link</div>
+      <div class="share-link-row">
+        <input type="text" class="form-input" id="share-link-input" readonly>
+        <button class="btn btn-primary" id="btn-share-link-copy">Copy link</button>
+      </div>
+      <div class="share-link-hint">Anyone with this link will be prompted to sign in with Google, then added as a viewer. You can promote them to editor or remove their access below.</div>
+      <div class="share-msg" id="share-msg" style="display:none;"></div>
+    </div>
+
+    <div class="share-section">
+      <div class="form-label">People with access</div>
+      <div class="share-list" id="share-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Login overlay (shown when not signed in) -->
+<div id="login-overlay" class="login-overlay">
+  <div class="login-card">
+    <h1 class="login-title">BoastIQ Tracker</h1>
+    <p class="login-desc" id="login-desc">Sign in to upload and analyze squash match videos.</p>
+    <button class="btn-google" id="btn-google-signin">
+      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+        <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
+        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+      </svg>
+      Sign in with Google
+    </button>
+  </div>
 </div>
 
 <div class="container">
+  <!-- Step 0: My Videos -->
+  <div id="step-videos" class="step">
+    <div class="videos-header">
+      <div>
+        <div class="step-label">Your Library</div>
+        <div class="step-title">My Videos</div>
+      </div>
+      <button class="btn btn-primary" id="btn-new-upload">+ Upload New Video</button>
+    </div>
+    <div class="videos-loading" id="videos-loading">Loading…</div>
+    <div class="videos-empty" id="videos-empty" style="display:none;">
+      <div class="videos-empty-icon">🎬</div>
+      <div class="videos-empty-title">No videos yet</div>
+      <div class="videos-empty-desc">Upload your first squash match video to get started.</div>
+    </div>
+    <div class="videos-grid" id="videos-grid"></div>
+  </div>
+
   <!-- Step 1: Upload -->
-  <div id="step-upload" class="step active">
+  <div id="step-upload" class="step">
     <div class="step-label">Step 1</div>
     <div class="step-title">Upload Video</div>
-    <div class="step-desc">Upload your squash match video to begin tracking. We support MP4 files up to 2GB.</div>
+    <div class="step-desc">Upload your squash match video to begin tracking. We support MP4 and MOV files.</div>
     <div class="upload-zone" id="upload-zone">
       <div class="icon">🎬</div>
       <div><strong>Drop video here</strong> or click to browse</div>
-      <p>MP4 · up to 2 GB</p>
-      <input type="file" id="file-input" accept="video/mp4,video/*">
+      <p>MP4 or MOV</p>
+      <input type="file" id="file-input" accept="video/*,video/mp4,video/quicktime,.mp4,.mov,.MOV">
     </div>
     <div class="progress-bar-wrap" id="upload-progress">
       <div class="progress-bar-bg"><div class="progress-bar-fill" id="upload-fill"></div></div>
@@ -1315,13 +2612,29 @@
   <div id="step-config" class="step">
     <div class="step-label">Step 2</div>
     <div class="step-title">Player Information</div>
-    <div class="step-desc">Enter player names and select their dominant hand. This helps us identify forehands and backhands accurately.</div>
+    <div class="step-desc">Tag each player. Search for an existing user, just type a name, or send an invite link so they can claim the slot themselves.</div>
     <div class="player-config-grid">
       <div class="player-card p1">
         <div class="player-card-header"><div class="dot"></div><h3>Player 1</h3></div>
-        <div class="form-group">
-          <label class="form-label">Name</label>
-          <input type="text" class="form-input" id="p1-name" placeholder="Enter name">
+        <div class="form-group player-picker" data-player="1">
+          <label class="form-label">Player</label>
+          <div class="player-picker-chip" id="p1-chip" style="display:none;">
+            <img class="player-picker-photo" id="p1-photo" alt="" />
+            <div class="player-picker-meta">
+              <div class="player-picker-name" id="p1-chip-name"></div>
+              <div class="player-picker-email" id="p1-chip-email"></div>
+            </div>
+            <button type="button" class="player-picker-clear" id="p1-chip-clear" aria-label="Clear">×</button>
+          </div>
+          <input type="text" class="form-input player-picker-input" id="p1-name" placeholder="Search a user or type a name">
+          <div class="player-picker-results" id="p1-results"></div>
+          <div class="player-picker-actions">
+            <button type="button" class="btn-link" id="p1-btn-invite">Send invite link</button>
+          </div>
+          <div class="player-picker-invite" id="p1-invite" style="display:none;">
+            <input type="text" class="form-input" id="p1-invite-input" readonly>
+            <button type="button" class="btn btn-secondary btn-sm" id="p1-invite-copy">Copy</button>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Dominant Hand</label>
@@ -1333,9 +2646,25 @@
       </div>
       <div class="player-card p2">
         <div class="player-card-header"><div class="dot"></div><h3>Player 2</h3></div>
-        <div class="form-group">
-          <label class="form-label">Name</label>
-          <input type="text" class="form-input" id="p2-name" placeholder="Enter name">
+        <div class="form-group player-picker" data-player="2">
+          <label class="form-label">Player</label>
+          <div class="player-picker-chip" id="p2-chip" style="display:none;">
+            <img class="player-picker-photo" id="p2-photo" alt="" />
+            <div class="player-picker-meta">
+              <div class="player-picker-name" id="p2-chip-name"></div>
+              <div class="player-picker-email" id="p2-chip-email"></div>
+            </div>
+            <button type="button" class="player-picker-clear" id="p2-chip-clear" aria-label="Clear">×</button>
+          </div>
+          <input type="text" class="form-input player-picker-input" id="p2-name" placeholder="Search a user or type a name">
+          <div class="player-picker-results" id="p2-results"></div>
+          <div class="player-picker-actions">
+            <button type="button" class="btn-link" id="p2-btn-invite">Send invite link</button>
+          </div>
+          <div class="player-picker-invite" id="p2-invite" style="display:none;">
+            <input type="text" class="form-input" id="p2-invite-input" readonly>
+            <button type="button" class="btn btn-secondary btn-sm" id="p2-invite-copy">Copy</button>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Dominant Hand</label>
@@ -1346,6 +2675,7 @@
         </div>
       </div>
     </div>
+    <div class="upload-status-banner" id="config-upload-status" style="display:none;"></div>
     <div class="btn-row"><button class="btn btn-primary" id="btn-continue-config">Continue →</button></div>
   </div>
 
@@ -1353,19 +2683,24 @@
   <div id="step-select" class="step">
     <div class="step-label">Step 3</div>
     <div class="step-title">Select Players</div>
-    <div class="step-desc">Click on each player in the frame. Left-click for Player 1, right-click for Player 2.</div>
-    <div class="player-names-display" id="player-names-display"></div>
-    <div class="video-meta" id="video-meta"></div>
-    <div class="frame-wrapper">
-      <div class="frame-container" id="frame-container"><canvas id="frame-canvas"></canvas></div>
-    </div>
-    <div class="points-info">
-      <div class="point-badge p1 unset" id="p1-badge">P1: not set</div>
-      <div class="point-badge p2 unset" id="p2-badge">P2: not set</div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-primary" id="btn-start" disabled>Start Tracking →</button>
-      <button class="btn btn-secondary" id="btn-reset-pts">Reset Points</button>
+    <div class="step-desc">Tap <strong>Player 1</strong> below, then tap the frame to drop the marker — tap again to fine-tune its position. Then tap <strong>Player 2</strong> and place it. When both markers are set, start tracking.</div>
+    <div class="rotate-hint" id="rotate-hint">↻ Rotate your phone sideways for a bigger view</div>
+    <div class="select-layout">
+      <div class="frame-wrapper">
+        <div class="frame-container" id="frame-container"><canvas id="frame-canvas"></canvas></div>
+      </div>
+      <div class="select-controls">
+        <div class="player-names-display" id="player-names-display"></div>
+        <div class="points-info">
+          <button type="button" class="point-badge p1 unset active" id="p1-badge">P1: not set</button>
+          <button type="button" class="point-badge p2 unset" id="p2-badge">P2: not set</button>
+        </div>
+        <div class="video-meta" id="video-meta"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-start" disabled>Start Tracking →</button>
+          <button class="btn btn-secondary" id="btn-reset-pts">Reset Points</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1407,52 +2742,89 @@
 
   <!-- Step 5: Results -->
   <div id="step-results" class="step">
-    <div class="step-label">Complete</div>
-    <div class="step-title">Results Ready</div>
-    <div class="step-desc" id="results-summary"></div>
-    
-    <div class="point-viewer">
-      <div class="pv-video-wrapper">
-        <div class="pv-video-container">
-          <video id="pv-video"></video>
+    <div class="dash-header">
+      <div>
+        <div class="step-label">Complete</div>
+        <div class="dash-title" id="results-summary"></div>
+      </div>
+      <div class="dash-meta">Point <span id="dash-point-cur">–</span> of <span id="dash-point-total">–</span> · <kbd>←</kbd><kbd>→</kbd> nav · <kbd>space</kbd> play</div>
+    </div>
+
+    <div class="dashboard">
+      <div class="dash-left">
+        <div class="dash-panel dash-viewer-panel">
+          <div class="dash-viewer-frame">
+            <video id="pv-video"></video>
+            <button class="dash-viewer-star" id="dash-viewer-star" title="Star this point" aria-label="Star current point">☆</button>
+          </div>
+          <div class="dash-scrub-row">
+            <input type="range" id="dash-scrub" class="dash-scrub" min="0" max="1" step="0.01" value="0" aria-label="Scrub through point">
+          </div>
+          <div class="dash-viewer-controls">
+            <button class="btn btn-secondary" id="pv-prev"><span>←</span> Prev</button>
+            <button class="btn btn-primary" id="pv-play">▶ Play</button>
+            <button class="btn btn-secondary" id="pv-next">Next <span>→</span></button>
+            <div class="dash-time"><span id="dash-time-cur">0.0</span> / <span id="dash-time-total">0.0</span> s</div>
+          </div>
+        </div>
+
+        <div class="dash-panel dash-stats-panel">
+          <div class="dash-panel-h">
+            <div class="dash-panel-title">Statistics</div>
+            <div class="dash-stats-toggle" id="dash-stats-toggle">
+              <button class="active" data-scope="match">Full match</button>
+              <button data-scope="point">Current point</button>
+              <button data-scope="notes">Notes</button>
+            </div>
+          </div>
+          <div id="dash-stats-body"><div class="dash-loading">Loading stats…</div></div>
         </div>
       </div>
-      
-      <div class="pv-controls">
-        <button class="btn btn-secondary" id="pv-prev"><span>←</span> Prev Point</button>
-        <button class="btn btn-primary" id="pv-play">▶ Play</button>
-        <button class="btn btn-secondary" id="pv-next">Next Point <span>→</span></button>
-      </div>
-      
-      <!-- Match Overview Section -->
-      <div class="pv-match-overview" id="pv-match-overview">
-        <div class="pv-overview-header">
-          <h3>Match Overview</h3>
-          <span class="pv-overview-loading" id="pv-overview-loading">Loading stats...</span>
+
+      <div class="dash-right">
+        <div class="dash-panel">
+          <div class="dash-panel-h">
+            <div class="dash-panel-title">Player heatmap</div>
+            <div class="dash-shot-filter">
+              <label><input type="checkbox" class="dash-filter-p1" checked><span class="dash-dot dash-dot-p1"></span><span class="dash-fname-p1">You</span></label>
+              <label><input type="checkbox" class="dash-filter-p2" checked><span class="dash-dot dash-dot-p2"></span><span class="dash-fname-p2">Opp</span></label>
+            </div>
+          </div>
+          <div id="dash-heatmap-svg" class="dash-svg-host dash-svg-tall"></div>
         </div>
-        <div class="pv-overview-content" id="pv-overview-content" style="display:none;">
-          <!-- Summary stats row -->
-          <div class="pv-overview-summary" id="pv-overview-summary"></div>
-          
-          <!-- Players comparison -->
-          <div class="pv-players-comparison" id="pv-overview-players"></div>
-        </div>
-      </div>
-      
-      <div class="pv-points-section">
-        <div class="pv-points-header">
-          <h3>Match Points</h3>
-          <span class="pv-points-count" id="pv-points-count">0 points</span>
-        </div>
-        <div class="pv-points-list" id="pv-points-list"></div>
-        <div class="pv-keyboard-hints">
-          <div class="pv-hint"><kbd>Space</kbd> Play / Pause</div>
-          <div class="pv-hint"><kbd>Hold Space</kbd> 2x Speed</div>
-          <div class="pv-hint"><kbd>← →</kbd> Navigate</div>
+        <div class="dash-shots-row">
+          <div class="dash-panel">
+            <div class="dash-panel-h">
+              <div class="dash-panel-title">Front wall</div>
+              <div class="dash-shot-filter">
+                <label><input type="checkbox" class="dash-filter-p1" checked><span class="dash-dot dash-dot-p1"></span><span class="dash-fname-p1">You</span></label>
+                <label><input type="checkbox" class="dash-filter-p2" checked><span class="dash-dot dash-dot-p2"></span><span class="dash-fname-p2">Opp</span></label>
+              </div>
+            </div>
+            <div id="dash-wall-svg" class="dash-svg-host dash-svg-wide"></div>
+          </div>
+          <div class="dash-panel">
+            <div class="dash-panel-h">
+              <div class="dash-panel-title">Floor bounce</div>
+              <div class="dash-shot-filter">
+                <label><input type="checkbox" class="dash-filter-p1" checked><span class="dash-dot dash-dot-p1"></span><span class="dash-fname-p1">You</span></label>
+                <label><input type="checkbox" class="dash-filter-p2" checked><span class="dash-dot dash-dot-p2"></span><span class="dash-fname-p2">Opp</span></label>
+              </div>
+            </div>
+            <div id="dash-floor-svg" class="dash-svg-host dash-svg-half"></div>
+          </div>
         </div>
       </div>
     </div>
-    
+
+    <div class="pv-points-section">
+      <div class="pv-points-header">
+        <h3>Match Points</h3>
+        <span class="pv-points-count" id="pv-points-count">0 points</span>
+      </div>
+      <div class="pv-points-list" id="pv-points-list"></div>
+    </div>
+
     <div class="btn-row" style="margin-top: 28px;">
       <button class="btn btn-secondary" onclick="location.reload()">Track Another Video</button>
     </div>
@@ -1461,10 +2833,315 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getStorage, ref, uploadBytesResumable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-const firebaseConfig = { apiKey: "AIzaSyCTaKTaSIZvDM-y_5RL2qvs40FLuOXsJgM", authDomain: "boastiq-dev.firebaseapp.com", projectId: "boastiq-dev", storageBucket: "boastiq.firebasestorage.app", messagingSenderId: "000000000000", appId: "1:1002696629084:ios:db2ec36e1791cc0575ff99" };
+import { getStorage, ref, uploadBytes, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, query, where, orderBy, getDocs, doc, getDoc, setDoc, updateDoc, onSnapshot, serverTimestamp, arrayUnion, arrayRemove, limit, writeBatch, startAt, endAt } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBa60PoCLm9ggt-7WDHBT3n_WfNggIaXKw",
+  authDomain: "boastiq.firebaseapp.com",
+  projectId: "boastiq",
+  storageBucket: "boastiq.firebasestorage.app",
+  messagingSenderId: "1002696629084",
+  appId: "1:1002696629084:web:94a6eb513e7261dc75ff99"
+};
 const fbApp = initializeApp(firebaseConfig);
 const fbStorage = getStorage(fbApp);
+const fbAuth = getAuth(fbApp);
+const fbFirestore = getFirestore(fbApp, "default");
+const googleProvider = new GoogleAuthProvider();
+let currentUser = null;
+
+// ---- Firestore helpers ----
+function makeVideoKey(filename) {
+  // Mirrors Modal's make_video_key (sanitized + 8-char uuid + UTC timestamp)
+  const stem = filename.replace(/\.[^.]+$/, "");
+  const sanitized = stem.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "video";
+  const shortId = crypto.randomUUID().replace(/-/g, "").substring(0, 8);
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  const ts = `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}_${pad(d.getUTCHours())}-${pad(d.getUTCMinutes())}-${pad(d.getUTCSeconds())}`;
+  return `${sanitized}_${shortId}_${ts}`;
+}
+
+async function ensureUserDoc(user) {
+  console.log("[DEBUG] ensureUserDoc called for uid:", user.uid);
+  try {
+    console.log("[DEBUG] Calling setDoc on users/" + user.uid);
+    await setDoc(doc(fbFirestore, "users", user.uid), {
+      email: user.email || null,
+      displayName: user.displayName || null,
+      displayName_lower: (user.displayName || "").toLowerCase(),
+      photoURL: user.photoURL || null,
+      createdAt: serverTimestamp(),
+    }, { merge: true });
+    console.log("[DEBUG] ensureUserDoc setDoc SUCCESS for uid:", user.uid);
+  } catch (err) {
+    console.error("[DEBUG] ensureUserDoc FAILED:", err.code, err.message, err);
+  }
+}
+
+async function createVideoDoc(videoKey, file) {
+  console.log("[DEBUG] createVideoDoc called for key:", videoKey);
+  // Seed editor/access arrays with the current coach (if any) so the coach
+  // is automatically granted read+write access to every new upload.
+  const editorUids = currentCoachUid ? [currentCoachUid] : [];
+  const accessUids = currentCoachUid ? [currentUser.uid, currentCoachUid] : [currentUser.uid];
+  try {
+    await setDoc(doc(fbFirestore, "videos", videoKey), {
+      ownerUid: currentUser.uid,
+      ownerEmail: currentUser.email || null,
+      title: file.name,
+      createdAt: serverTimestamp(),
+      status: "uploading",
+      viewerUids: [],
+      editorUids,
+      accessUids,
+    });
+    console.log("[DEBUG] createVideoDoc setDoc SUCCESS for key:", videoKey);
+  } catch (err) {
+    console.error("[DEBUG] createVideoDoc FAILED:", err.code, err.message, err);
+    throw err;
+  }
+}
+
+async function updateVideoStatus(videoKey, status) {
+  if (!videoKey) return;
+  try {
+    await updateDoc(doc(fbFirestore, "videos", videoKey), { status });
+  } catch (err) {
+    console.warn(`updateVideoStatus(${status}) failed:`, err);
+  }
+}
+
+// ---- Auth UI wiring ----
+const loginOverlay = document.getElementById("login-overlay");
+const userInfo = document.getElementById("user-info");
+const userPhoto = document.getElementById("user-photo");
+const userName = document.getElementById("user-name");
+const btnSignIn = document.getElementById("btn-google-signin");
+const btnSignOut = document.getElementById("btn-signout");
+const userAvatar = document.getElementById("user-avatar");
+const userDropdown = document.getElementById("user-dropdown");
+
+function setUserMenuOpen(open) {
+  userDropdown.hidden = !open;
+  userAvatar.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+userAvatar.addEventListener("click", (e) => {
+  e.stopPropagation();
+  setUserMenuOpen(userDropdown.hidden);
+});
+
+document.addEventListener("click", (e) => {
+  if (!userInfo.contains(e.target)) setUserMenuOpen(false);
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") setUserMenuOpen(false);
+});
+
+btnSignIn.addEventListener("click", async () => {
+  btnSignIn.disabled = true;
+  try {
+    await signInWithPopup(fbAuth, googleProvider);
+  } catch (err) {
+    console.error("Sign-in failed:", err);
+    alert(`Sign-in failed: ${err.code || err.message}`);
+  } finally {
+    btnSignIn.disabled = false;
+  }
+});
+
+btnSignOut.addEventListener("click", async () => {
+  setUserMenuOpen(false);
+  try { await signOut(fbAuth); } catch (err) { console.error("Sign-out failed:", err); }
+});
+
+// If the page loaded via a share link or coach link, customize the login-overlay message.
+const pendingShareOnLoad = getPendingShareKey();
+const pendingCoachOnLoad = getPendingCoachUid();
+const pendingInviteOnLoad = getPendingInvite();
+if (pendingInviteOnLoad) {
+  document.getElementById("login-desc").textContent =
+    "You've been invited to be tagged as a player in a squash video. Sign in with Google to accept.";
+} else if (pendingShareOnLoad) {
+  document.getElementById("login-desc").textContent =
+    "You've been invited to view a shared video. Sign in with Google to continue.";
+} else if (pendingCoachOnLoad) {
+  document.getElementById("login-desc").textContent =
+    "You've been invited to be coached. Sign in with Google to accept.";
+}
+
+// ---- Recipient-side clip viewer (?clip=KEY&point=N) ----
+// Hijacks the page when a clip-share link is opened. Requires NO login.
+const _clipParams = (() => {
+  const p = new URLSearchParams(window.location.search);
+  const k = p.get("clip");
+  const n = parseInt(p.get("point"), 10);
+  if (k && Number.isFinite(n) && n > 0) return { videoKey: k, pointNumber: n };
+  return null;
+})();
+if (_clipParams) {
+  // Hide the entire signed-in app + login overlay; viewer renders standalone.
+  document.body.style.overflow = "hidden";
+  const _loginOverlay = document.getElementById("login-overlay");
+  if (_loginOverlay) _loginOverlay.style.display = "none";
+  renderClipViewer(_clipParams.videoKey, _clipParams.pointNumber);
+}
+
+async function renderClipViewer(videoKey, pointNumber) {
+  const root = document.createElement("div");
+  root.className = "clip-viewer-root";
+  root.innerHTML = `
+    <div class="clip-viewer-wrap">
+      <div class="clip-viewer-brand">BoastIQ Tracker · shared clip</div>
+      <h1 class="clip-viewer-title" id="cv-title">Loading point ${pointNumber}…</h1>
+      <div class="clip-viewer-meta" id="cv-meta"></div>
+      <div id="cv-body">
+        <div class="clip-viewer-status">Rendering clip… this can take a few seconds the first time.</div>
+      </div>
+      <div class="clip-viewer-footer">
+        Shared via <a href="${window.location.origin}/">BoastIQ Tracker</a>.
+        This link plays only this single point — no login needed.
+      </div>
+    </div>
+  `;
+  document.body.appendChild(root);
+
+  const titleEl = document.getElementById("cv-title");
+  const metaEl  = document.getElementById("cv-meta");
+  const bodyEl  = document.getElementById("cv-body");
+
+  // Two parallel fetches: point metadata for labels + the rendered clip URL.
+  let pointMeta = null;
+  let clipUrl = null;
+  try {
+    const [pointResp, clipResp] = await Promise.all([
+      fetch(`${window.location.origin}/api/points/${encodeURIComponent(videoKey)}/${pointNumber}`),
+      fetch(`${window.location.origin}/api/clip/${encodeURIComponent(videoKey)}/${pointNumber}`),
+    ]);
+    if (pointResp.ok) pointMeta = await pointResp.json();
+    if (clipResp.ok) {
+      const cd = await clipResp.json();
+      if (cd && cd.url) clipUrl = cd.url;
+    }
+  } catch (e) {
+    console.error("Clip-viewer fetch failed:", e);
+  }
+
+  if (!clipUrl) {
+    bodyEl.innerHTML = `<div class="clip-viewer-status" style="color:#f85149;">Couldn't load the clip. The video owner may have removed it, or the rendering job failed.</div>`;
+    return;
+  }
+
+  const p1Name = pointMeta?.player_1?.name || "Player 1";
+  const p2Name = pointMeta?.player_2?.name || "Player 2";
+  titleEl.textContent = `${p1Name} vs ${p2Name} · Point ${pointNumber}`;
+  const dur = pointMeta?.duration_sec;
+  const shots = pointMeta?.total_shots;
+  metaEl.textContent =
+    (dur ? `${dur.toFixed(1)}s rally` : "") +
+    (dur && shots ? " · " : "") +
+    (shots ? `${shots} shots` : "");
+
+  // Try to figure out winner the same way the main app does (last hitter loses).
+  const rally = pointMeta?.rally || [];
+  const lastShot = rally[rally.length - 1];
+  const winner = lastShot
+    ? (lastShot.hit_by === "player_1" ? p2Name : p1Name)
+    : null;
+
+  bodyEl.innerHTML = `
+    <video
+      class="clip-viewer-video"
+      src="${clipUrl}"
+      controls autoplay playsinline preload="auto"
+    ></video>
+    <div class="clip-viewer-stats">
+      <div class="clip-viewer-stat">
+        <div class="clip-viewer-stat-label">Rally Duration</div>
+        <div class="clip-viewer-stat-value">${dur ? dur.toFixed(1) + "s" : "—"}</div>
+      </div>
+      <div class="clip-viewer-stat">
+        <div class="clip-viewer-stat-label">Total Shots</div>
+        <div class="clip-viewer-stat-value">${shots ?? "—"}</div>
+      </div>
+      ${winner ? `
+      <div class="clip-viewer-stat">
+        <div class="clip-viewer-stat-label">Winner</div>
+        <div class="clip-viewer-stat-value">${winner}</div>
+      </div>` : ""}
+    </div>
+  `;
+}
+
+onAuthStateChanged(fbAuth, async (user) => {
+  console.log("[DEBUG] onAuthStateChanged fired. user:", user ? user.uid : "null");
+  currentUser = user;
+  if (user) {
+    console.log("[DEBUG] Signed in as", user.email, "uid:", user.uid);
+    loginOverlay.classList.add("hidden");
+    userInfo.style.display = "flex";
+    document.getElementById("btn-manage-coach").style.display = "inline-flex";
+    userPhoto.src = user.photoURL || "";
+    userName.textContent = user.displayName || user.email || "Signed in";
+    await ensureUserDoc(user);
+    await loadCurrentCoach();
+
+    // If the user arrived via a coach link, lock in the (permanent) referral
+    // record first, then offer the (changeable) coach assignment.
+    const pendingCoachUid = getPendingCoachUid();
+    if (pendingCoachUid) {
+      await recordReferralIfNeeded(pendingCoachUid);
+      await claimCoachFromLink(pendingCoachUid);
+      clearCoachParam();
+    }
+
+    // If the user arrived via a share link, claim access then land on the video.
+    const pendingKey = getPendingShareKey();
+    if (pendingKey) {
+      const ok = await claimSharedVideo(pendingKey);
+      clearShareParam();
+      if (ok) {
+        // Load My Videos so the shared one appears, then open it.
+        await loadMyVideos();
+        try {
+          const snap = await getDoc(doc(fbFirestore, "videos", pendingKey));
+          if (snap.exists()) {
+            await openVideo(pendingKey, snap.data());
+            return;
+          }
+        } catch (err) { console.warn("Auto-open after share failed:", err); }
+      }
+    }
+
+    // If the user arrived via an invite link, claim the player slot on that video.
+    const pendingInvite = getPendingInvite();
+    if (pendingInvite) {
+      const claimedKey = await claimInvite(pendingInvite);
+      clearInviteParam();
+      if (claimedKey) {
+        await loadMyVideos();
+        try {
+          const snap = await getDoc(doc(fbFirestore, "videos", claimedKey));
+          if (snap.exists()) {
+            await openVideo(claimedKey, snap.data());
+            return;
+          }
+        } catch (err) { console.warn("Auto-open after invite failed:", err); }
+      }
+    }
+    goToMyVideos();
+  } else {
+    console.log("[DEBUG] Signed out");
+    loginOverlay.classList.remove("hidden");
+    userInfo.style.display = "none";
+    setUserMenuOpen(false);
+    document.getElementById("btn-manage-coach").style.display = "none";
+  }
+});
 let jobId = null, firebasePath = null, videoMeta = {}, videoKey = null;
 let player1 = null, player2 = null, ws = null;
 let frameImage = null, repromptImage = null;
@@ -1473,15 +3150,876 @@ let videoBlobUrl = null;
 let playerConfig = { player_1: { name: "Player 1", handedness: "right" }, player_2: { name: "Player 2", handedness: "right" } };
 let totalSrcFrames = 0, completedSrcFrames = 0, currentSegSrcStart = 0, currentSegSrcFrames = 0, currentSegPct = 0, processingStartTime = 0;
 const API = window.location.origin;
-const $steps = { upload: document.getElementById("step-upload"), config: document.getElementById("step-config"), select: document.getElementById("step-select"), process: document.getElementById("step-process"), results: document.getElementById("step-results") };
-function showStep(name) { Object.values($steps).forEach(s => s.classList.remove("active")); $steps[name].classList.add("active"); }
+const $steps = { videos: document.getElementById("step-videos"), upload: document.getElementById("step-upload"), config: document.getElementById("step-config"), select: document.getElementById("step-select"), process: document.getElementById("step-process"), results: document.getElementById("step-results") };
+const btnBackToVideos = document.getElementById("btn-back-to-videos");
+function showStep(name) {
+  Object.values($steps).forEach(s => s.classList.remove("active"));
+  $steps[name].classList.add("active");
+  // Show back link on every step except the videos list itself
+  btnBackToVideos.style.display = (name === "videos") ? "none" : "inline-flex";
+}
+btnBackToVideos.addEventListener("click", () => {
+  // Only the tab actively driving a tracking job (has a live ws) should be warned.
+  if ($steps.process.classList.contains("active") && ws) {
+    if (!confirm("Tracking is in progress. Leave anyway?")) return;
+    try { ws.close(); } catch (e) {} ws = null;
+  }
+  stopProcessingPreview();
+  goToMyVideos();
+});
+
+function goToMyVideos() {
+  showStep("videos");
+  loadMyVideos();
+}
+
+// ---- My Videos list ----
+async function loadMyVideos() {
+  if (!currentUser) return;
+  const grid = document.getElementById("videos-grid");
+  const loading = document.getElementById("videos-loading");
+  const empty = document.getElementById("videos-empty");
+  loading.style.display = "block";
+  empty.style.display = "none";
+  grid.innerHTML = "";
+  try {
+    const q = query(
+      collection(fbFirestore, "videos"),
+      where("accessUids", "array-contains", currentUser.uid),
+      orderBy("createdAt", "desc")
+    );
+    const snap = await getDocs(q);
+    loading.style.display = "none";
+    if (snap.empty) {
+      empty.style.display = "block";
+      return;
+    }
+    const cards = await Promise.all(snap.docs.map(d => renderVideoCard(d.id, d.data())));
+    cards.forEach(c => grid.appendChild(c));
+  } catch (err) {
+    console.error("loadMyVideos failed:", err);
+    loading.textContent = `Failed to load videos: ${err.code || err.message}`;
+  }
+}
+
+async function renderVideoCard(videoKeyId, data) {
+  const card = document.createElement("div");
+  card.className = "video-card";
+  const thumb = document.createElement("div");
+  thumb.className = "video-card-thumb";
+  // Status badge
+  const status = data.status || "ready";
+  const statusBadge = document.createElement("div");
+  statusBadge.className = `video-card-status ${status}`;
+  statusBadge.textContent = status;
+  thumb.appendChild(statusBadge);
+  // Try to load thumbnail image
+  if (data.thumbnailPath) {
+    try {
+      const url = await getDownloadURL(ref(fbStorage, data.thumbnailPath));
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = data.title || "thumbnail";
+      thumb.insertBefore(img, statusBadge);
+    } catch (err) {
+      console.warn("Thumbnail load failed:", err);
+      thumb.appendChild(document.createTextNode("🎬"));
+    }
+  } else {
+    thumb.appendChild(document.createTextNode("🎬"));
+  }
+  // Body
+  const body = document.createElement("div");
+  body.className = "video-card-body";
+  const titleEl = document.createElement("div");
+  titleEl.className = "video-card-title";
+  titleEl.textContent = data.title || videoKeyId;
+  const metaEl = document.createElement("div");
+  metaEl.className = "video-card-meta";
+  const dateStr = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleDateString() : "—";
+  const dateSpan = document.createElement("span");
+  dateSpan.textContent = dateStr;
+  metaEl.appendChild(dateSpan);
+
+  const isOwner = data.ownerUid === currentUser.uid;
+  if (isOwner) {
+    const shareBtn = document.createElement("button");
+    shareBtn.className = "video-card-share-btn";
+    shareBtn.textContent = "Share";
+    shareBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openShareDialog(videoKeyId, data);
+    });
+    metaEl.appendChild(shareBtn);
+  } else {
+    const sharedTag = document.createElement("span");
+    sharedTag.className = "video-card-shared-tag";
+    sharedTag.textContent = "Shared";
+    metaEl.appendChild(sharedTag);
+  }
+
+  body.appendChild(titleEl);
+  body.appendChild(metaEl);
+  card.appendChild(thumb);
+  card.appendChild(body);
+  card.addEventListener("click", () => openVideo(videoKeyId, data));
+  return card;
+}
+
+async function openVideo(key, data) {
+  const status = data.status || "ready";
+  if (status === "uploading" || status === "processing") {
+    // Let anyone (owner or a shared viewer) watch the raw video with a live
+    // status bar while the tracking pipeline runs, instead of blocking them.
+    return openProcessingPreview(key, data);
+  }
+  if (status === "failed") {
+    alert("This video failed to process. You can re-upload it.");
+    return;
+  }
+  if (status !== "complete") {
+    alert(`This video is in '${status}' state and can't be viewed yet.`);
+    return;
+  }
+  // Quick ping: even if status==complete, the post-processing pipeline that generates
+  // point_starts.json runs after the WS "complete" message. Bail with a helpful message
+  // if the stats aren't there yet instead of showing a broken "Generating stats..." UI.
+  try {
+    const ping = await fetch(`${API}/api/points/${key}`, { method: "GET" });
+    if (ping.status === 404) {
+      alert("Stats are still being generated for this video. This usually finishes a few minutes after tracking completes — try again shortly.");
+      return;
+    }
+  } catch (err) {
+    console.warn("Points ping failed (will try to open anyway):", err);
+  }
+  // Load completed video into the results view
+  videoKey = key;
+  if (data.playerConfig) {
+    playerConfig = data.playerConfig;
+  }
+  try {
+    videoBlobUrl = await getDownloadURL(ref(fbStorage, `uploaded-videos/${key}.mp4`));
+  } catch (err) {
+    console.warn("Source video URL fetch failed:", err);
+    videoBlobUrl = null;
+  }
+  showStep("results");
+  showResults({});
+}
+
+// ---- Processing preview (raw video + live status bar while tracking runs) ----
+let processingUnsub = null;
+function stopProcessingPreview() {
+  if (processingUnsub) { try { processingUnsub(); } catch (e) {} processingUnsub = null; }
+}
+async function openProcessingPreview(key, data) {
+  videoKey = key;
+  if (data.playerConfig) playerConfig = data.playerConfig;
+  // Viewers have no elapsed-time baseline, so keep the ETA math off (0 = disabled).
+  processingStartTime = 0;
+
+  const status0 = data.status || "processing";
+  const initialPct = typeof data.progress === "number" ? data.progress : 0;
+  updateOverallProgress(initialPct, data.statusMessage || (status0 === "uploading" ? "Uploading video…" : "Processing video…"));
+  document.getElementById("overall-eta").textContent = "";
+  document.getElementById("reprompt-section").style.display = "none";
+
+  // Load the raw uploaded video so it can be watched while the pipeline runs.
+  const preview = document.getElementById("preview-video");
+  preview.removeAttribute("src");
+  preview.load();
+  try {
+    preview.src = await getDownloadURL(ref(fbStorage, `uploaded-videos/${key}.mp4`));
+    preview.load();
+  } catch (err) {
+    // During "uploading" the raw file may not exist yet — the status bar still shows.
+    console.warn("Raw video not available yet:", err);
+  }
+
+  showStep("process");
+
+  // Live-follow the Firestore doc until the job finishes.
+  stopProcessingPreview();
+  processingUnsub = onSnapshot(doc(fbFirestore, "videos", key), (snap) => {
+    if (!snap.exists()) return;
+    const d = snap.data();
+    const status = d.status || "processing";
+    if (status === "complete") {
+      stopProcessingPreview();
+      updateOverallProgress(100, "Complete! Loading results…");
+      openVideo(key, d);
+      return;
+    }
+    if (status === "failed") {
+      stopProcessingPreview();
+      updateOverallProgress(typeof d.progress === "number" ? d.progress : initialPct, "Processing failed. You can re-upload this video.");
+      return;
+    }
+    const pct = typeof d.progress === "number" ? d.progress : initialPct;
+    updateOverallProgress(pct, d.statusMessage || (status === "uploading" ? "Uploading video…" : "Processing video…"));
+  }, (err) => console.warn("Processing preview snapshot error:", err));
+}
+
+// ---- Coach management ----
+let currentCoachUid = null;
+const coachModal = document.getElementById("coach-modal");
+const coachCurrentSection = document.getElementById("coach-current-section");
+const coachCurrentRow = document.getElementById("coach-current-row");
+const coachSearchLabel = document.getElementById("coach-search-label");
+const coachSearchInput = document.getElementById("coach-search-input");
+const coachResults = document.getElementById("coach-results");
+const coachMsg = document.getElementById("coach-msg");
+
+document.getElementById("btn-close-coach").addEventListener("click", closeCoachModal);
+coachModal.addEventListener("click", (e) => { if (e.target === coachModal) closeCoachModal(); });
+document.getElementById("btn-manage-coach").addEventListener("click", openCoachModal);
+document.getElementById("btn-i-am-coach").addEventListener("click", () => showCoachView("share"));
+document.getElementById("btn-coach-back").addEventListener("click", () => showCoachView("main"));
+document.getElementById("btn-coach-link-copy").addEventListener("click", handleCoachLinkCopy);
+
+const coachViewMain = document.getElementById("coach-view-main");
+const coachViewShare = document.getElementById("coach-view-share");
+const coachModalTitle = document.getElementById("coach-modal-title");
+const coachLinkInput = document.getElementById("coach-link-input");
+const coachLinkMsg = document.getElementById("coach-link-msg");
+
+function showCoachView(view) {
+  if (view === "share") {
+    coachViewMain.style.display = "none";
+    coachViewShare.style.display = "block";
+    coachModalTitle.textContent = "Your Coach Link";
+    coachLinkInput.value = buildCoachLink(currentUser.uid);
+    coachLinkMsg.style.display = "none";
+  } else {
+    coachViewMain.style.display = "block";
+    coachViewShare.style.display = "none";
+    coachModalTitle.textContent = "Manage Coach";
+  }
+}
+
+function buildCoachLink(coachUid) {
+  return `${window.location.origin}/?coach=${encodeURIComponent(coachUid)}`;
+}
+
+async function handleCoachLinkCopy() {
+  const url = coachLinkInput.value;
+  try {
+    await navigator.clipboard.writeText(url);
+    coachLinkMsg.className = "share-msg success";
+    coachLinkMsg.textContent = "Link copied to clipboard.";
+    coachLinkMsg.style.display = "block";
+  } catch (err) {
+    coachLinkInput.select();
+    coachLinkInput.setSelectionRange(0, url.length);
+    coachLinkMsg.className = "share-msg error";
+    coachLinkMsg.textContent = "Couldn't auto-copy. Press ⌘C to copy the selected link.";
+    coachLinkMsg.style.display = "block";
+  }
+}
+
+let coachSearchTimer = null;
+coachSearchInput.addEventListener("input", () => {
+  clearTimeout(coachSearchTimer);
+  coachSearchTimer = setTimeout(runCoachSearch, 300);
+});
+
+function showCoachMsg(text, kind) {
+  coachMsg.style.display = "block";
+  coachMsg.className = `share-msg ${kind}`;
+  coachMsg.textContent = text;
+}
+function clearCoachMsg() { coachMsg.style.display = "none"; coachMsg.textContent = ""; }
+
+async function loadCurrentCoach() {
+  if (!currentUser) { currentCoachUid = null; return; }
+  try {
+    const snap = await getDoc(doc(fbFirestore, "users", currentUser.uid));
+    currentCoachUid = snap.exists() ? (snap.data().coachUid || null) : null;
+  } catch (err) {
+    console.warn("loadCurrentCoach failed:", err);
+    currentCoachUid = null;
+  }
+}
+
+async function openCoachModal() {
+  clearCoachMsg();
+  coachSearchInput.value = "";
+  coachResults.innerHTML = "";
+  coachModal.style.display = "flex";
+  showCoachView("main");
+  await renderCurrentCoach();
+}
+
+function closeCoachModal() {
+  coachModal.style.display = "none";
+  coachResults.innerHTML = "";
+}
+
+async function renderCurrentCoach() {
+  if (!currentCoachUid) {
+    coachCurrentSection.style.display = "none";
+    coachSearchLabel.textContent = "Find a coach by name";
+    return;
+  }
+  coachCurrentSection.style.display = "block";
+  coachSearchLabel.textContent = "Change coach";
+  try {
+    const snap = await getDoc(doc(fbFirestore, "users", currentCoachUid));
+    const data = snap.exists() ? snap.data() : null;
+    coachCurrentRow.innerHTML = "";
+    const photo = document.createElement("img");
+    photo.className = "share-row-photo";
+    photo.src = (data && data.photoURL) || "";
+    coachCurrentRow.appendChild(photo);
+    const info = document.createElement("div");
+    info.className = "share-row-info";
+    const nameEl = document.createElement("div");
+    nameEl.className = "share-row-name";
+    nameEl.textContent = (data && data.displayName) || currentCoachUid;
+    const emailEl = document.createElement("div");
+    emailEl.className = "share-row-email";
+    emailEl.textContent = (data && data.email) || "";
+    info.appendChild(nameEl);
+    info.appendChild(emailEl);
+    coachCurrentRow.appendChild(info);
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "share-row-remove";
+    removeBtn.textContent = "Remove";
+    removeBtn.addEventListener("click", removeCurrentCoach);
+    coachCurrentRow.appendChild(removeBtn);
+  } catch (err) {
+    coachCurrentRow.innerHTML = "<div class='share-empty'>Failed to load current coach.</div>";
+  }
+}
+
+async function runCoachSearch() {
+  const q = coachSearchInput.value.trim().toLowerCase();
+  coachResults.innerHTML = "";
+  clearCoachMsg();
+  if (q.length < 2) {
+    coachResults.innerHTML = "<div class='coach-empty'>Type at least 2 characters to search.</div>";
+    return;
+  }
+  try {
+    // Prefix search on displayName_lower
+    const qref = query(
+      collection(fbFirestore, "users"),
+      orderBy("displayName_lower"),
+      startAt(q),
+      endAt(q + "\uf8ff"),
+      limit(10)
+    );
+    const snap = await getDocs(qref);
+    if (snap.empty) {
+      coachResults.innerHTML = "<div class='coach-empty'>No users match that name.</div>";
+      return;
+    }
+    snap.docs.forEach((d) => coachResults.appendChild(buildCoachResultRow(d.id, d.data())));
+  } catch (err) {
+    console.error("runCoachSearch failed:", err);
+    showCoachMsg(`Search failed: ${err.code || err.message}`, "error");
+  }
+}
+
+function buildCoachResultRow(uid, data) {
+  const row = document.createElement("div");
+  row.className = "coach-result-row";
+  const photo = document.createElement("img");
+  photo.className = "share-row-photo";
+  photo.src = data.photoURL || "";
+  row.appendChild(photo);
+  const info = document.createElement("div");
+  info.className = "share-row-info";
+  const nameEl = document.createElement("div");
+  nameEl.className = "share-row-name";
+  nameEl.textContent = data.displayName || uid;
+  const emailEl = document.createElement("div");
+  emailEl.className = "share-row-email";
+  emailEl.textContent = data.email || "";
+  info.appendChild(nameEl);
+  info.appendChild(emailEl);
+  row.appendChild(info);
+  // Disable self-selection
+  if (uid === currentUser.uid) {
+    row.classList.add("disabled");
+    const tag = document.createElement("span");
+    tag.className = "coach-result-tag";
+    tag.textContent = "You";
+    row.appendChild(tag);
+  } else if (uid === currentCoachUid) {
+    row.classList.add("disabled");
+    const tag = document.createElement("span");
+    tag.className = "coach-result-tag";
+    tag.textContent = "Current coach";
+    row.appendChild(tag);
+  } else {
+    row.addEventListener("click", () => assignCoach(uid, data));
+  }
+  return row;
+}
+
+async function assignCoach(newCoachUid, newCoachData) {
+  if (newCoachUid === currentUser.uid) return;
+  clearCoachMsg();
+  const previousCoachUid = currentCoachUid;
+  showCoachMsg("Updating your videos...", "success");
+  try {
+    // Find all videos this user owns
+    const videosQ = query(
+      collection(fbFirestore, "videos"),
+      where("ownerUid", "==", currentUser.uid)
+    );
+    const videosSnap = await getDocs(videosQ);
+    // Batched write: update user doc + all owned videos
+    const batch = writeBatch(fbFirestore);
+    batch.update(doc(fbFirestore, "users", currentUser.uid), { coachUid: newCoachUid });
+    videosSnap.docs.forEach((vd) => {
+      const updates = {
+        editorUids: arrayUnion(newCoachUid),
+        accessUids: arrayUnion(newCoachUid),
+      };
+      // If there was a previous coach (different from new one), remove them
+      if (previousCoachUid && previousCoachUid !== newCoachUid) {
+        // Note: arrayRemove on accessUids could accidentally drop a coach who
+        // was also added as a viewer separately. Acceptable for v1 — we only
+        // remove from editorUids and not from accessUids if they're still in
+        // viewerUids (simpler: just remove from both, re-add if shared again).
+        updates.editorUids = arrayRemove(previousCoachUid);
+        updates.accessUids = arrayRemove(previousCoachUid);
+        // arrayUnion still needs to land — chain into a second update below.
+      }
+      batch.update(doc(fbFirestore, "videos", vd.id), updates);
+    });
+    await batch.commit();
+
+    // If we removed an old coach, we also need a follow-up batch to add the
+    // new coach (because we overwrote the editorUids/accessUids updates above
+    // with arrayRemove). Simpler: do two passes.
+    if (previousCoachUid && previousCoachUid !== newCoachUid) {
+      const batch2 = writeBatch(fbFirestore);
+      videosSnap.docs.forEach((vd) => {
+        batch2.update(doc(fbFirestore, "videos", vd.id), {
+          editorUids: arrayUnion(newCoachUid),
+          accessUids: arrayUnion(newCoachUid),
+        });
+      });
+      await batch2.commit();
+    }
+
+    currentCoachUid = newCoachUid;
+    showCoachMsg(`Coach set to ${newCoachData.displayName || newCoachUid}. Applied to ${videosSnap.size} video(s).`, "success");
+    coachSearchInput.value = "";
+    coachResults.innerHTML = "";
+    await renderCurrentCoach();
+  } catch (err) {
+    console.error("assignCoach failed:", err);
+    showCoachMsg(`Failed to set coach: ${err.code || err.message}`, "error");
+  }
+}
+
+async function removeCurrentCoach() {
+  if (!currentCoachUid) return;
+  if (!confirm("Remove your coach? They'll lose access to all your videos.")) return;
+  clearCoachMsg();
+  const oldCoachUid = currentCoachUid;
+  showCoachMsg("Updating your videos...", "success");
+  try {
+    const videosQ = query(
+      collection(fbFirestore, "videos"),
+      where("ownerUid", "==", currentUser.uid)
+    );
+    const videosSnap = await getDocs(videosQ);
+    const batch = writeBatch(fbFirestore);
+    batch.update(doc(fbFirestore, "users", currentUser.uid), { coachUid: null });
+    videosSnap.docs.forEach((vd) => {
+      batch.update(doc(fbFirestore, "videos", vd.id), {
+        editorUids: arrayRemove(oldCoachUid),
+        accessUids: arrayRemove(oldCoachUid),
+      });
+    });
+    await batch.commit();
+    currentCoachUid = null;
+    showCoachMsg(`Coach removed from ${videosSnap.size} video(s).`, "success");
+    await renderCurrentCoach();
+  } catch (err) {
+    console.error("removeCurrentCoach failed:", err);
+    showCoachMsg(`Failed to remove coach: ${err.code || err.message}`, "error");
+  }
+}
+
+// ---- Sharing dialog ----
+let currentSharingVideoKey = null;
+const shareModal = document.getElementById("share-modal");
+const shareTitleEl = document.getElementById("share-video-title");
+const shareLinkInput = document.getElementById("share-link-input");
+const shareList = document.getElementById("share-list");
+const shareMsg = document.getElementById("share-msg");
+
+document.getElementById("btn-close-share").addEventListener("click", closeShareDialog);
+shareModal.addEventListener("click", (e) => { if (e.target === shareModal) closeShareDialog(); });
+document.getElementById("btn-share-link-copy").addEventListener("click", handleShareLinkCopy);
+
+function buildShareUrl(videoKey) {
+  return `${window.location.origin}/?share=${encodeURIComponent(videoKey)}`;
+}
+
+async function handleShareLinkCopy() {
+  if (!currentSharingVideoKey) return;
+  const url = buildShareUrl(currentSharingVideoKey);
+  try {
+    await navigator.clipboard.writeText(url);
+    showShareMsg("Link copied to clipboard.", "success");
+  } catch (err) {
+    // Fallback: select the input so user can copy manually
+    shareLinkInput.select();
+    shareLinkInput.setSelectionRange(0, url.length);
+    showShareMsg("Couldn't auto-copy. The link is selected — press ⌘C to copy.", "error");
+  }
+}
+
+function showShareMsg(text, kind) {
+  shareMsg.style.display = "block";
+  shareMsg.className = `share-msg ${kind}`;
+  shareMsg.textContent = text;
+}
+function clearShareMsg() { shareMsg.style.display = "none"; shareMsg.textContent = ""; }
+
+function openShareDialog(videoKey, data) {
+  if (data.ownerUid !== currentUser.uid) {
+    alert("Only the owner can manage sharing for this video.");
+    return;
+  }
+  currentSharingVideoKey = videoKey;
+  shareTitleEl.textContent = data.title || videoKey;
+  shareLinkInput.value = buildShareUrl(videoKey);
+  clearShareMsg();
+  shareModal.style.display = "flex";
+  renderShareList();
+}
+
+function closeShareDialog() {
+  shareModal.style.display = "none";
+  currentSharingVideoKey = null;
+  shareList.innerHTML = "";
+}
+
+async function renderShareList() {
+  shareList.innerHTML = "<div class='share-empty'>Loading…</div>";
+  try {
+    const docRef = doc(fbFirestore, "videos", currentSharingVideoKey);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) { shareList.innerHTML = "<div class='share-empty'>Video not found.</div>"; return; }
+    const data = snap.data();
+    const ownerUid = data.ownerUid;
+    const viewerUids = data.viewerUids || [];
+    const editorUids = data.editorUids || [];
+    // Build the rows: owner first, then editors, then viewers
+    const rows = [{ uid: ownerUid, role: "owner" }]
+      .concat(editorUids.map((u) => ({ uid: u, role: "editor" })))
+      .concat(viewerUids.map((u) => ({ uid: u, role: "viewer" })));
+    // Fetch user profiles in parallel
+    const profiles = await Promise.all(rows.map(async (r) => {
+      try {
+        const uSnap = await getDoc(doc(fbFirestore, "users", r.uid));
+        return { ...r, profile: uSnap.exists() ? uSnap.data() : null };
+      } catch (err) { return { ...r, profile: null }; }
+    }));
+    shareList.innerHTML = "";
+    profiles.forEach((p) => shareList.appendChild(buildShareRow(p)));
+    if (profiles.length === 1) {
+      // Only the owner. Show a hint.
+      const hint = document.createElement("div");
+      hint.className = "share-empty";
+      hint.textContent = "Not shared with anyone yet.";
+      shareList.appendChild(hint);
+    }
+  } catch (err) {
+    console.error("renderShareList failed:", err);
+    shareList.innerHTML = `<div class='share-empty'>Failed to load: ${err.code || err.message}</div>`;
+  }
+}
+
+function buildShareRow({ uid, role, profile }) {
+  const row = document.createElement("div");
+  row.className = "share-row";
+  const photo = document.createElement("img");
+  photo.className = "share-row-photo";
+  photo.src = (profile && profile.photoURL) || "";
+  photo.alt = "";
+  row.appendChild(photo);
+  const info = document.createElement("div");
+  info.className = "share-row-info";
+  const nameEl = document.createElement("div");
+  nameEl.className = "share-row-name";
+  nameEl.textContent = (profile && profile.displayName) || (profile && profile.email) || uid;
+  const emailEl = document.createElement("div");
+  emailEl.className = "share-row-email";
+  emailEl.textContent = (profile && profile.email) || "";
+  info.appendChild(nameEl);
+  info.appendChild(emailEl);
+  row.appendChild(info);
+  if (role === "owner") {
+    const tag = document.createElement("span");
+    tag.className = "share-row-owner-tag";
+    tag.textContent = "Owner";
+    row.appendChild(tag);
+  } else {
+    const select = document.createElement("select");
+    select.className = "share-row-role";
+    [["viewer", "Viewer"], ["editor", "Editor"]].forEach(([v, label]) => {
+      const opt = document.createElement("option");
+      opt.value = v; opt.textContent = label;
+      if (v === role) opt.selected = true;
+      select.appendChild(opt);
+    });
+    select.addEventListener("change", () => changeShareRole(uid, role, select.value));
+    row.appendChild(select);
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "share-row-remove";
+    removeBtn.textContent = "Remove";
+    removeBtn.addEventListener("click", () => removeShare(uid, role));
+    row.appendChild(removeBtn);
+  }
+  return row;
+}
+
+// ---- Incoming share link: claim access after sign-in ----
+function getPendingShareKey() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("share");
+}
+
+async function claimSharedVideo(videoKey) {
+  if (!currentUser || !videoKey) return false;
+  try {
+    const docRef = doc(fbFirestore, "videos", videoKey);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) {
+      alert("This shared video no longer exists.");
+      return false;
+    }
+    const data = snap.data();
+    const access = data.accessUids || [];
+    if (access.includes(currentUser.uid)) {
+      // Already have access — nothing to do.
+      return true;
+    }
+    await updateDoc(docRef, {
+      viewerUids: arrayUnion(currentUser.uid),
+      accessUids: arrayUnion(currentUser.uid),
+    });
+    return true;
+  } catch (err) {
+    console.error("claimSharedVideo failed:", err);
+    alert(`Couldn't add you to the shared video: ${err.code || err.message}`);
+    return false;
+  }
+}
+
+function clearShareParam() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("share");
+  window.history.replaceState({}, "", url.pathname + (url.searchParams.toString() ? "?" + url.searchParams.toString() : ""));
+}
+
+// ---- Incoming player-invite link: bind the recipient to a player slot on a video ----
+function getPendingInvite() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("invite");
+}
+
+function clearInviteParam() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("invite");
+  window.history.replaceState({}, "", url.pathname + (url.searchParams.toString() ? "?" + url.searchParams.toString() : ""));
+}
+
+async function claimInvite(token) {
+  if (!currentUser || !token) return null;
+  try {
+    const inviteRef = doc(fbFirestore, "invites", token);
+    const inviteSnap = await getDoc(inviteRef);
+    if (!inviteSnap.exists()) {
+      alert("This invite link is invalid or has been revoked.");
+      return null;
+    }
+    const inv = inviteSnap.data();
+    if (inv.claimedBy && inv.claimedBy !== currentUser.uid) {
+      alert("This invite link has already been claimed by someone else.");
+      return null;
+    }
+    if (!inv.videoKey || !inv.playerSlot) {
+      alert("This invite link is malformed.");
+      return null;
+    }
+    const videoRef = doc(fbFirestore, "videos", inv.videoKey);
+    const videoSnap = await getDoc(videoRef);
+    if (!videoSnap.exists()) {
+      alert("The video this invite points to no longer exists.");
+      return null;
+    }
+    const vdata = videoSnap.data();
+    const existing = (vdata.playerConfig && vdata.playerConfig[`player_${inv.playerSlot}`]) || { handedness: "right" };
+    const updates = {
+      [`playerConfig.player_${inv.playerSlot}`]: {
+        ...existing,
+        uid: currentUser.uid,
+        name: currentUser.displayName || existing.name || `Player ${inv.playerSlot}`,
+        email: currentUser.email || null,
+        handedness: existing.handedness || "right",
+      },
+      viewerUids: arrayUnion(currentUser.uid),
+      accessUids: arrayUnion(currentUser.uid),
+    };
+    await updateDoc(videoRef, updates);
+    await updateDoc(inviteRef, { claimedBy: currentUser.uid, claimedAt: serverTimestamp() });
+    return inv.videoKey;
+  } catch (err) {
+    console.error("claimInvite failed:", err);
+    alert(`Could not accept invite: ${err.code || err.message}`);
+    return null;
+  }
+}
+
+// ---- Incoming coach link: auto-assign the link sender as your coach after sign-in ----
+function getPendingCoachUid() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("coach");
+}
+
+function clearCoachParam() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("coach");
+  window.history.replaceState({}, "", url.pathname + (url.searchParams.toString() ? "?" + url.searchParams.toString() : ""));
+}
+
+// Set-once referral pointer: who originally invited this user to BoastIQ.
+// Distinct from `coachUid` — referrer is permanent, coach can change.
+async function recordReferralIfNeeded(referrerUid) {
+  if (!currentUser || !referrerUid || referrerUid === currentUser.uid) return;
+  try {
+    const userRef = doc(fbFirestore, "users", currentUser.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) return;
+    if (snap.data().referredBy) return; // Already set; never overwrite.
+    await updateDoc(userRef, {
+      referredBy: referrerUid,
+      referredAt: serverTimestamp(),
+    });
+    console.log("[DEBUG] Recorded referral from", referrerUid);
+  } catch (err) {
+    console.warn("recordReferralIfNeeded failed:", err);
+  }
+}
+
+async function claimCoachFromLink(coachUid) {
+  if (!currentUser || !coachUid) return false;
+  if (coachUid === currentUser.uid) {
+    alert("You can't make yourself your own coach.");
+    return false;
+  }
+  try {
+    const snap = await getDoc(doc(fbFirestore, "users", coachUid));
+    if (!snap.exists()) {
+      alert("This coach link is invalid — the user no longer exists.");
+      return false;
+    }
+    const coachData = snap.data();
+    if (currentCoachUid === coachUid) {
+      alert(`${coachData.displayName || "This person"} is already your coach.`);
+      return true;
+    }
+    if (currentCoachUid) {
+      const replace = confirm(`You already have a coach. Replace them with ${coachData.displayName || "this user"}?`);
+      if (!replace) return false;
+    } else {
+      const accept = confirm(`Make ${coachData.displayName || "this user"} your coach? They'll get read + write access to every video you own.`);
+      if (!accept) return false;
+    }
+    await assignCoach(coachUid, coachData);
+    return true;
+  } catch (err) {
+    console.error("claimCoachFromLink failed:", err);
+    alert(`Failed to set coach: ${err.code || err.message}`);
+    return false;
+  }
+}
+
+async function changeShareRole(uid, oldRole, newRole) {
+  if (oldRole === newRole) return;
+  clearShareMsg();
+  try {
+    const docRef = doc(fbFirestore, "videos", currentSharingVideoKey);
+    const targetRoleField = newRole === "viewer" ? "viewerUids" : "editorUids";
+    const oldRoleField = oldRole === "viewer" ? "viewerUids" : "editorUids";
+    await updateDoc(docRef, {
+      [targetRoleField]: arrayUnion(uid),
+      [oldRoleField]: arrayRemove(uid),
+      // accessUids unchanged — user still has access, just different role
+    });
+    showShareMsg(`Updated role to ${newRole}.`, "success");
+    renderShareList();
+  } catch (err) {
+    console.error("changeShareRole failed:", err);
+    showShareMsg(`Failed: ${err.code || err.message}`, "error");
+  }
+}
+
+async function removeShare(uid, role) {
+  clearShareMsg();
+  if (!confirm("Remove this person's access?")) return;
+  try {
+    const docRef = doc(fbFirestore, "videos", currentSharingVideoKey);
+    const roleField = role === "viewer" ? "viewerUids" : "editorUids";
+    await updateDoc(docRef, {
+      [roleField]: arrayRemove(uid),
+      accessUids: arrayRemove(uid),
+    });
+    showShareMsg("Removed.", "success");
+    renderShareList();
+  } catch (err) {
+    console.error("removeShare failed:", err);
+    showShareMsg(`Failed: ${err.code || err.message}`, "error");
+  }
+}
+
+// ---- Thumbnail upload (called from Start Tracking) ----
+async function uploadThumbnail(key, sourceCanvas) {
+  return new Promise((resolve) => {
+    sourceCanvas.toBlob(async (blob) => {
+      if (!blob) { resolve(null); return; }
+      try {
+        const path = `video-data/${key}/thumbnail.jpg`;
+        await uploadBytes(ref(fbStorage, path), blob, { contentType: "image/jpeg" });
+        await updateDoc(doc(fbFirestore, "videos", key), { thumbnailPath: path });
+        console.log("[DEBUG] Thumbnail uploaded:", path);
+        resolve(path);
+      } catch (err) {
+        console.warn("Thumbnail upload failed:", err);
+        resolve(null);
+      }
+    }, "image/jpeg", 0.85);
+  });
+}
+let activeProcessingKey = null, lastProgressPersist = 0;
 function updateOverallProgress(pct, statusText) {
   pct = Math.min(100, Math.max(0, pct));
   document.getElementById("overall-pct").textContent = Math.round(pct) + "%";
   document.getElementById("overall-fill").style.width = pct + "%";
   if (statusText) document.getElementById("overall-status").textContent = statusText;
   const elapsed = (Date.now() - processingStartTime) / 1000;
-  if (pct > 2 && elapsed > 10) { const remaining = (elapsed / (pct / 100)) - elapsed; const m = Math.floor(remaining / 60), s = Math.floor(remaining % 60); document.getElementById("overall-eta").textContent = remaining > 5 ? `~${m}m ${s}s remaining` : "Almost done..."; }
+  if (processingStartTime > 0 && pct > 2 && elapsed > 10) { const remaining = (elapsed / (pct / 100)) - elapsed; const m = Math.floor(remaining / 60), s = Math.floor(remaining % 60); document.getElementById("overall-eta").textContent = remaining > 5 ? `~${m}m ${s}s remaining` : "Almost done..."; }
+  // Persist progress so shared viewers / other tabs see a live status bar (throttled).
+  if (activeProcessingKey && activeProcessingKey === videoKey) {
+    const now = Date.now();
+    if (now - lastProgressPersist > 2500) {
+      lastProgressPersist = now;
+      const update = { progress: Math.round(pct) };
+      if (statusText) update.statusMessage = statusText;
+      updateDoc(doc(fbFirestore, "videos", videoKey), update).catch(() => {});
+    }
+  }
 }
 const uploadZone = document.getElementById("upload-zone");
 const fileInput = document.getElementById("file-input");
@@ -1490,27 +4028,484 @@ uploadZone.addEventListener("dragover", e => { e.preventDefault(); uploadZone.cl
 uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("dragover"));
 uploadZone.addEventListener("drop", e => { e.preventDefault(); uploadZone.classList.remove("dragover"); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
 fileInput.addEventListener("change", () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
+const ACCEPTED_VIDEO_EXTS = [".mp4", ".mov"];
+
+// Module-level handle to the in-flight upload so Start Tracking can await it.
+let uploadPromise = null;
+let uploadAbort = null;
+
+// Extract metadata + first frame from a local File using a hidden <video> element.
+// Returns { frame_b64, frame_blob, src_width, src_height, src_fps, total_frames, duration_sec }.
+// fps is measured via requestVideoFrameCallback when available; otherwise falls back to 30.
+function extractClientSideFrame(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement("video");
+    video.preload = "auto";
+    video.muted = true;
+    video.playsInline = true;
+    video.src = url;
+
+    let settled = false;
+    const cleanup = () => { try { URL.revokeObjectURL(url); } catch (e) {} };
+    const fail = (msg) => { if (settled) return; settled = true; cleanup(); reject(new Error(msg)); };
+    const ok = (val) => { if (settled) return; settled = true; cleanup(); resolve(val); };
+
+    video.addEventListener("error", () => fail("Could not decode video locally"));
+    video.addEventListener("loadedmetadata", () => {
+      // Seek to t=0 to guarantee a real first frame is available.
+      try { video.currentTime = 0; } catch (e) { /* some browsers throw before metadata */ }
+    });
+    video.addEventListener("seeked", async () => {
+      const w = video.videoWidth, h = video.videoHeight, duration = video.duration || 0;
+      if (!w || !h) { fail("Video has no readable dimensions"); return; }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, w, h);
+
+      // Measure fps using requestVideoFrameCallback (sample ~8 frames). Falls back to 30.
+      let fps = 30;
+      if (typeof video.requestVideoFrameCallback === "function") {
+        try {
+          fps = await measureFpsViaCallback(video);
+        } catch (e) { /* keep 30 */ }
+      }
+
+      const total_frames = Math.max(1, Math.round(duration * fps));
+      const frame_b64 = canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
+      const frame_blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.85));
+
+      ok({
+        frame_b64,
+        frame_blob,
+        src_width: w,
+        src_height: h,
+        src_fps: Math.round(fps * 100) / 100,
+        total_frames,
+        duration_sec: Math.round(duration * 100) / 100,
+      });
+    });
+  });
+}
+
+function measureFpsViaCallback(video) {
+  return new Promise((resolve) => {
+    const samples = [];
+    let lastMediaTime = null;
+    const playPromise = video.play().catch(() => {});
+    const tick = (_now, metadata) => {
+      const t = metadata.mediaTime;
+      if (lastMediaTime !== null) {
+        const dt = t - lastMediaTime;
+        if (dt > 0 && dt < 0.5) samples.push(dt);
+      }
+      lastMediaTime = t;
+      if (samples.length < 8) {
+        video.requestVideoFrameCallback(tick);
+      } else {
+        try { video.pause(); video.currentTime = 0; } catch (e) {}
+        // Median interval for robustness to outliers.
+        samples.sort((a, b) => a - b);
+        const med = samples[Math.floor(samples.length / 2)];
+        resolve(med > 0 ? 1 / med : 30);
+      }
+    };
+    Promise.resolve(playPromise).then(() => video.requestVideoFrameCallback(tick));
+    // Hard timeout in case the browser stalls.
+    setTimeout(() => resolve(30), 4000);
+  });
+}
+
+// XHR PUT to a signed URL with progress events. Returns a Promise plus an abort handle.
+function uploadViaSignedPut(signedUrl, file, onProgress) {
+  let xhr = new XMLHttpRequest();
+  const promise = new Promise((resolve, reject) => {
+    xhr.open("PUT", signedUrl, true);
+    xhr.setRequestHeader("Content-Type", "video/mp4");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(e.loaded, e.total);
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed: HTTP ${xhr.status} ${xhr.responseText || ""}`));
+    };
+    xhr.onerror = () => reject(new Error("Upload network error"));
+    xhr.onabort = () => reject(new Error("Upload aborted"));
+    xhr.send(file);
+  });
+  return { promise, abort: () => xhr.abort() };
+}
+
 async function handleFile(file) {
-  if (!file.type.startsWith("video/")) { alert("Please upload a video file."); return; }
+  const nameLower = (file.name || "").toLowerCase();
+  const extOk = ACCEPTED_VIDEO_EXTS.some(ext => nameLower.endsWith(ext));
+  const mimeOk = file.type && file.type.startsWith("video/");
+  if (!mimeOk && !extOk) { alert("Please upload an MP4 or MOV video file."); return; }
+  if (!currentUser) { alert("You must be signed in to upload."); return; }
   videoBlobUrl = URL.createObjectURL(file);
-  const jobResp = await fetch(`${API}/api/create-job`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ filename: file.name }) });
-  const jobData = await jobResp.json(); jobId = jobData.job_id; videoKey = jobData.video_key;
-  firebasePath = `uploaded-videos/${videoKey}.mp4`;
-  const storageRef = ref(fbStorage, firebasePath);
-  const uploadTask = uploadBytesResumable(storageRef, file);
-  const progWrap = document.getElementById("upload-progress"), progFill = document.getElementById("upload-fill"), progText = document.getElementById("upload-text");
+
+  // Reset player-tagging state in case the user is starting a second upload in this session.
+  player1 = null; player2 = null;
+  resetPlayerPickers();
+
+  videoKey = makeVideoKey(file.name);
+  try {
+    await createVideoDoc(videoKey, file);
+  } catch (err) {
+    console.error("Failed to create video record:", err);
+    alert(`Could not create video record: ${err.message || err.code}`);
+    return;
+  }
+
+  // 1) Show the local progress bar while bytes are flowing.
+  const progWrap = document.getElementById("upload-progress");
+  const progFill = document.getElementById("upload-fill");
+  const progText = document.getElementById("upload-text");
   progWrap.style.display = "block";
-  uploadTask.on("state_changed", (snap) => { const pct = (snap.bytesTransferred / snap.totalBytes * 100).toFixed(1); progFill.style.width = pct + "%"; progText.textContent = `${(snap.bytesTransferred/1e6).toFixed(1)} MB / ${(snap.totalBytes/1e6).toFixed(1)} MB (${pct}%)`; },
-    (err) => { progText.textContent = `Upload failed: ${err.message}`; progText.style.color = "var(--red)"; },
-    async () => { progText.textContent = "Upload complete. Preparing video...";
-      const prepResp = await fetch(`${API}/api/prepare`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ job_id: jobId, gcs_path: firebasePath, video_key: videoKey }) });
-      const meta = await prepResp.json(); if (meta.error) { progText.textContent = `Error: ${meta.error}`; return; } videoMeta = meta; showStep("config"); });
+  progFill.style.width = "0%";
+  progText.style.color = "";
+  progText.textContent = "Reading video...";
+
+  // 2) Extract first frame + metadata client-side (no backend dependency).
+  let clientMeta;
+  try {
+    clientMeta = await extractClientSideFrame(file);
+  } catch (err) {
+    progText.textContent = `Could not read video: ${err.message}`;
+    progText.style.color = "var(--red)";
+    updateVideoStatus(videoKey, "failed");
+    return;
+  }
+  videoMeta = {
+    frame_b64: clientMeta.frame_b64,
+    src_width: clientMeta.src_width,
+    src_height: clientMeta.src_height,
+    src_fps: clientMeta.src_fps,
+    total_frames: clientMeta.total_frames,
+    duration_sec: clientMeta.duration_sec,
+  };
+
+  // 3) Move the user straight into Player Information — no waiting on backend.
+  showStep("config");
+
+  // 4) Kick off (a) the create-job call, (b) the source-video upload, and (c) the
+  //    first_frame.png upload in parallel. Start Tracking later awaits uploadPromise.
+  firebasePath = `uploaded-videos/${videoKey}.mp4`;
+  uploadAbort = null;
+  uploadPromise = (async () => {
+    // Backend job_id assignment.
+    const jobResp = await fetch(`${API}/api/create-job`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name, video_key: videoKey }),
+    });
+    const jobData = await jobResp.json();
+    jobId = jobData.job_id;
+
+    // Signed PUT URL for direct GCS upload (faster than uploadBytesResumable for typical files).
+    const urlResp = await fetch(`${API}/api/get-upload-url`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job_id: jobId, video_key: videoKey }),
+    });
+    const urlData = await urlResp.json();
+    if (!urlData.upload_url) throw new Error("Could not obtain upload URL");
+
+    // The signed URL writes to uploaded-videos/{key}.mp4 — keep firebasePath aligned.
+    firebasePath = urlData.gcs_path || firebasePath;
+
+    const fmtMb = (n) => (n / 1e6).toFixed(1);
+    const onProg = (loaded, total) => {
+      const pct = (loaded / total) * 100;
+      progFill.style.width = pct.toFixed(1) + "%";
+      progText.textContent = `${fmtMb(loaded)} MB / ${fmtMb(total)} MB (${pct.toFixed(1)}%)`;
+    };
+    try {
+      const put = uploadViaSignedPut(urlData.upload_url, file, onProg);
+      uploadAbort = put.abort;
+      await put.promise;
+    } catch (err) {
+      // Most likely a CORS preflight failure on storage.googleapis.com — fall
+      // back to the Firebase resumable upload which goes via the
+      // firebasestorage.googleapis.com endpoint that already has CORS set up.
+      console.warn("Signed-PUT upload failed, falling back to resumable upload:", err);
+      progText.textContent = "Switching upload method...";
+      progFill.style.width = "0%";
+      const storageRef = ref(fbStorage, firebasePath);
+      const task = uploadBytesResumable(storageRef, file);
+      uploadAbort = () => task.cancel();
+      await new Promise((resolve, reject) => {
+        task.on(
+          "state_changed",
+          (snap) => onProg(snap.bytesTransferred, snap.totalBytes),
+          (e) => reject(e),
+          () => resolve()
+        );
+      });
+    }
+    progFill.style.width = "100%";
+    progText.textContent = "Upload complete.";
+    await updateVideoStatus(videoKey, "ready");
+
+    // Fire-and-forget: write the client-extracted first frame to GCS so the
+    // admin landmark-tagging UI can pick it up without waiting for the GPU.
+    // Also point the video's thumbnailPath at this clean first frame so the
+    // My Videos dashboard shows a thumbnail immediately — even for videos that
+    // never reach Start Tracking. (Start Tracking later overwrites thumbnailPath
+    // with the marked-up frame via uploadThumbnail.)
+    try {
+      if (clientMeta.frame_blob) {
+        const firstFramePath = `video-data/${videoKey}/first_frame.png`;
+        await uploadBytes(
+          ref(fbStorage, firstFramePath),
+          clientMeta.frame_blob,
+          { contentType: "image/jpeg" }
+        );
+        try {
+          await updateDoc(doc(fbFirestore, "videos", videoKey), { thumbnailPath: firstFramePath });
+        } catch (e) { console.warn("thumbnailPath set failed:", e); }
+      }
+    } catch (err) { console.warn("First frame upload failed:", err); }
+  })();
+
+  uploadPromise.catch((err) => {
+    console.error("Upload failed:", err);
+    progText.textContent = `Upload failed: ${err.message}`;
+    progText.style.color = "var(--red)";
+    updateVideoStatus(videoKey, "failed");
+  });
 }
 document.querySelectorAll(".hand-btn").forEach(btn => { btn.addEventListener("click", () => { const player = btn.dataset.player, hand = btn.dataset.hand; document.querySelectorAll(`.hand-btn[data-player="${player}"]`).forEach(b => b.classList.remove("selected")); btn.classList.add("selected"); if (player === "1") playerConfig.player_1.handedness = hand; else playerConfig.player_2.handedness = hand; }); });
+
+// ---- Per-player picker (search users / type free-text / mint invite link) ----
+function pickerSlot(n) {
+  return {
+    input: document.getElementById(`p${n}-name`),
+    results: document.getElementById(`p${n}-results`),
+    chip: document.getElementById(`p${n}-chip`),
+    chipName: document.getElementById(`p${n}-chip-name`),
+    chipEmail: document.getElementById(`p${n}-chip-email`),
+    chipPhoto: document.getElementById(`p${n}-photo`),
+    chipClear: document.getElementById(`p${n}-chip-clear`),
+    inviteBtn: document.getElementById(`p${n}-btn-invite`),
+    invitePanel: document.getElementById(`p${n}-invite`),
+    inviteInput: document.getElementById(`p${n}-invite-input`),
+    inviteCopy: document.getElementById(`p${n}-invite-copy`),
+  };
+}
+
+function setPlayerPick(n, { uid, displayName, email, photoURL }) {
+  const cfg = n === 1 ? playerConfig.player_1 : playerConfig.player_2;
+  cfg.uid = uid || null;
+  cfg.name = displayName || "";
+  cfg.email = email || null;
+  const s = pickerSlot(n);
+  if (uid) {
+    s.chip.style.display = "flex";
+    s.chipName.textContent = displayName || uid;
+    s.chipEmail.textContent = email || "";
+    s.chipPhoto.src = photoURL || "";
+    s.input.style.display = "none";
+    s.results.classList.remove("open");
+    s.results.innerHTML = "";
+  } else {
+    s.chip.style.display = "none";
+    s.input.style.display = "block";
+    s.input.value = displayName || "";
+  }
+}
+
+function clearPlayerPick(n) {
+  setPlayerPick(n, { uid: null, displayName: "", email: null, photoURL: null });
+  const s = pickerSlot(n);
+  s.invitePanel.style.display = "none";
+}
+
+function resetPlayerPickers() {
+  playerConfig = {
+    player_1: { name: "", handedness: "right", uid: null, email: null },
+    player_2: { name: "", handedness: "right", uid: null, email: null },
+  };
+  clearPlayerPick(1);
+  clearPlayerPick(2);
+  document.querySelectorAll("#step-config .hand-btn").forEach((b) => {
+    b.classList.toggle("selected", b.dataset.hand === "right");
+  });
+  const banner = document.getElementById("config-upload-status");
+  if (banner) { banner.style.display = "none"; banner.textContent = ""; banner.className = "upload-status-banner"; }
+}
+
+async function searchUsersByName(q) {
+  if (!q || q.length < 2) return [];
+  const lower = q.toLowerCase();
+  const qref = query(
+    collection(fbFirestore, "users"),
+    orderBy("displayName_lower"),
+    startAt(lower),
+    endAt(lower + ""),
+    limit(8)
+  );
+  const snap = await getDocs(qref);
+  return snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
+}
+
+function renderPickerResults(n, rows, freeText) {
+  const s = pickerSlot(n);
+  s.results.innerHTML = "";
+  const otherSlot = n === 1 ? playerConfig.player_2 : playerConfig.player_1;
+  if (rows.length === 0 && (!freeText || freeText.length < 2)) {
+    s.results.classList.remove("open");
+    return;
+  }
+  rows.forEach((u) => {
+    const row = document.createElement("div");
+    row.className = "player-picker-row";
+    const photo = document.createElement("img");
+    photo.className = "player-picker-row-photo";
+    photo.src = u.photoURL || "";
+    row.appendChild(photo);
+    const info = document.createElement("div");
+    info.className = "player-picker-row-info";
+    const nameEl = document.createElement("div");
+    nameEl.className = "player-picker-row-name";
+    nameEl.textContent = u.displayName || u.uid;
+    const emailEl = document.createElement("div");
+    emailEl.className = "player-picker-row-email";
+    emailEl.textContent = u.email || "";
+    info.appendChild(nameEl); info.appendChild(emailEl);
+    row.appendChild(info);
+    if (otherSlot.uid && otherSlot.uid === u.uid) {
+      row.classList.add("disabled");
+      const tag = document.createElement("span");
+      tag.className = "coach-result-tag";
+      tag.textContent = "Other player";
+      row.appendChild(tag);
+    } else {
+      row.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        setPlayerPick(n, { uid: u.uid, displayName: u.displayName, email: u.email, photoURL: u.photoURL });
+      });
+    }
+    s.results.appendChild(row);
+  });
+  if (freeText && freeText.length >= 2) {
+    const row = document.createElement("div");
+    row.className = "player-picker-row";
+    const info = document.createElement("div");
+    info.className = "player-picker-row-info";
+    const nameEl = document.createElement("div");
+    nameEl.className = "player-picker-row-name";
+    nameEl.textContent = `Use "${freeText}" as a tag`;
+    const emailEl = document.createElement("div");
+    emailEl.className = "player-picker-row-email";
+    emailEl.textContent = "No account — just a label on this video";
+    info.appendChild(nameEl); info.appendChild(emailEl);
+    row.appendChild(info);
+    row.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      const cfg = n === 1 ? playerConfig.player_1 : playerConfig.player_2;
+      cfg.name = freeText;
+      cfg.uid = null;
+      cfg.email = null;
+      pickerSlot(n).results.classList.remove("open");
+    });
+    s.results.appendChild(row);
+  }
+  if (s.results.children.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "player-picker-empty";
+    empty.textContent = "No users match. Keep typing to use as a tag.";
+    s.results.appendChild(empty);
+  }
+  s.results.classList.add("open");
+}
+
+const pickerTimers = { 1: null, 2: null };
+function wirePicker(n) {
+  const s = pickerSlot(n);
+  s.input.addEventListener("input", () => {
+    const q = s.input.value.trim();
+    const cfg = n === 1 ? playerConfig.player_1 : playerConfig.player_2;
+    cfg.name = q;
+    cfg.uid = null;
+    clearTimeout(pickerTimers[n]);
+    pickerTimers[n] = setTimeout(async () => {
+      let rows = [];
+      if (q.length >= 2) {
+        try { rows = await searchUsersByName(q); }
+        catch (err) { console.warn("user search failed:", err); }
+      }
+      renderPickerResults(n, rows, q);
+    }, 200);
+  });
+  s.input.addEventListener("focus", () => {
+    const q = s.input.value.trim();
+    if (q.length >= 2) {
+      searchUsersByName(q).then((rows) => renderPickerResults(n, rows, q)).catch(() => {});
+    }
+  });
+  s.input.addEventListener("blur", () => {
+    // Defer so a result click can register before we close.
+    setTimeout(() => s.results.classList.remove("open"), 120);
+  });
+  s.chipClear.addEventListener("click", () => clearPlayerPick(n));
+  s.inviteBtn.addEventListener("click", () => createInviteForPlayer(n));
+  s.inviteCopy.addEventListener("click", async () => {
+    const url = s.inviteInput.value;
+    try { await navigator.clipboard.writeText(url); s.inviteCopy.textContent = "Copied!"; setTimeout(() => (s.inviteCopy.textContent = "Copy"), 1500); }
+    catch (e) { s.inviteInput.select(); s.inviteInput.setSelectionRange(0, url.length); }
+  });
+}
+wirePicker(1);
+wirePicker(2);
+
+async function createInviteForPlayer(n) {
+  if (!videoKey || !currentUser) return;
+  const s = pickerSlot(n);
+  s.inviteBtn.disabled = true;
+  s.inviteBtn.textContent = "Creating link...";
+  try {
+    const token = crypto.randomUUID().replace(/-/g, "");
+    await setDoc(doc(fbFirestore, "invites", token), {
+      videoKey,
+      playerSlot: n,
+      createdBy: currentUser.uid,
+      createdAt: serverTimestamp(),
+      claimedBy: null,
+    });
+    const url = `${window.location.origin}/?invite=${encodeURIComponent(token)}`;
+    s.inviteInput.value = url;
+    s.invitePanel.style.display = "flex";
+    s.inviteBtn.textContent = "Send invite link";
+  } catch (err) {
+    console.error("createInvite failed:", err);
+    alert(`Could not create invite: ${err.code || err.message}`);
+    s.inviteBtn.textContent = "Send invite link";
+  } finally {
+    s.inviteBtn.disabled = false;
+  }
+}
+
+function showConfigUploadStatus(text, kind) {
+  const banner = document.getElementById("config-upload-status");
+  if (!banner) return;
+  banner.style.display = "block";
+  banner.className = "upload-status-banner" + (kind ? " " + kind : "");
+  banner.textContent = text;
+}
+
 document.getElementById("btn-continue-config").addEventListener("click", async () => {
-  playerConfig.player_1.name = document.getElementById("p1-name").value.trim() || "Player 1";
-  playerConfig.player_2.name = document.getElementById("p2-name").value.trim() || "Player 2";
-  console.log("Saving player config:", { video_key: videoKey, player_1_name: playerConfig.player_1.name, player_2_name: playerConfig.player_2.name });
+  // Finalize names from the input boxes if no chip was chosen.
+  for (const n of [1, 2]) {
+    const cfg = n === 1 ? playerConfig.player_1 : playerConfig.player_2;
+    if (!cfg.uid) {
+      const v = document.getElementById(`p${n}-name`).value.trim();
+      cfg.name = v || `Player ${n}`;
+    }
+  }
+
+  console.log("Saving player config:", { video_key: videoKey, player_1: playerConfig.player_1, player_2: playerConfig.player_2 });
   try {
     const resp = await fetch(`${API}/api/player-config`, {
       method: "POST",
@@ -1519,14 +4514,33 @@ document.getElementById("btn-continue-config").addEventListener("click", async (
         video_key: videoKey,
         player_1_name: playerConfig.player_1.name,
         player_1_handedness: playerConfig.player_1.handedness,
+        player_1_uid: playerConfig.player_1.uid || null,
         player_2_name: playerConfig.player_2.name,
-        player_2_handedness: playerConfig.player_2.handedness
+        player_2_handedness: playerConfig.player_2.handedness,
+        player_2_uid: playerConfig.player_2.uid || null,
       })
     });
     const result = await resp.json();
     if (result.error) { console.error("Player config save error:", result.error); }
     else { console.log("Player config saved successfully:", result); }
   } catch (err) { console.error("Failed to save player config:", err); }
+
+  // Grant access to picked users so they can see this video.
+  try {
+    const newUids = [playerConfig.player_1.uid, playerConfig.player_2.uid]
+      .filter((u) => u && u !== currentUser.uid);
+    if (newUids.length > 0) {
+      const updates = {
+        viewerUids: arrayUnion(...newUids),
+        accessUids: arrayUnion(...newUids),
+        playerConfig,
+      };
+      await updateDoc(doc(fbFirestore, "videos", videoKey), updates);
+    } else {
+      await updateDoc(doc(fbFirestore, "videos", videoKey), { playerConfig });
+    }
+  } catch (err) { console.warn("playerConfig persist failed:", err); }
+
   setupFrameSelection(videoMeta);
   showStep("select");
 });
@@ -1537,18 +4551,75 @@ function setupFrameSelection(meta) {
   frameImage = new Image();
   frameImage.onload = () => { canvas.width = frameImage.width; canvas.height = frameImage.height; drawFrame(ctx, frameImage); };
   frameImage.src = "data:image/jpeg;base64," + meta.frame_b64;
-  canvas.addEventListener("click", (e) => onFrameClick(e, canvas, ctx, false));
-  canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); onFrameClick(e, canvas, ctx, true); });
+  setActivePlayer(1);
+  if (!canvas.dataset.wired) {
+    canvas.addEventListener("click", (e) => onFrameClick(e, canvas, ctx));
+    // Desktop convenience: right-click drops Player 2 without toggling first.
+    canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); setActivePlayer(2); onFrameClick(e, canvas, ctx); });
+    canvas.dataset.wired = "1";
+  }
 }
-function onFrameClick(e, canvas, ctx, isRightClick) { const rect = canvas.getBoundingClientRect(); const x = Math.round((e.clientX - rect.left) * (canvas.width / rect.width)); const y = Math.round((e.clientY - rect.top) * (canvas.height / rect.height)); if (isRightClick || player1 !== null) { player2 = [x, y]; } else { player1 = [x, y]; } drawFrame(ctx, frameImage); updatePointBadges(); }
+let activePlayer = 1;
+function setActivePlayer(n) { activePlayer = n; updatePointBadges(); }
+function onFrameClick(e, canvas, ctx) { const rect = canvas.getBoundingClientRect(); const x = Math.round((e.clientX - rect.left) * (canvas.width / rect.width)); const y = Math.round((e.clientY - rect.top) * (canvas.height / rect.height)); if (activePlayer === 2) { player2 = [x, y]; } else { player1 = [x, y]; } drawFrame(ctx, frameImage); updatePointBadges(); }
 function drawFrame(ctx, img) { ctx.drawImage(img, 0, 0); if (player1) drawPoint(ctx, player1, "#f05050", playerConfig.player_1.name.substring(0, 8)); if (player2) drawPoint(ctx, player2, "#5080f0", playerConfig.player_2.name.substring(0, 8)); }
 function drawPoint(ctx, pt, color, label) { ctx.beginPath(); ctx.arc(pt[0], pt[1], 14, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke(); ctx.shadowColor = color; ctx.shadowBlur = 15; ctx.fill(); ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "bold 14px Inter"; ctx.fillText(label, pt[0] + 20, pt[1] + 5); }
-function updatePointBadges() { const b1 = document.getElementById("p1-badge"), b2 = document.getElementById("p2-badge"); const p1Label = playerConfig.player_1.name.substring(0, 10), p2Label = playerConfig.player_2.name.substring(0, 10); b1.textContent = player1 ? `${p1Label}: (${player1[0]}, ${player1[1]})` : `${p1Label}: not set`; b1.className = `point-badge p1 ${player1 ? "set" : "unset"}`; b2.textContent = player2 ? `${p2Label}: (${player2[0]}, ${player2[1]})` : `${p2Label}: not set`; b2.className = `point-badge p2 ${player2 ? "set" : "unset"}`; document.getElementById("btn-start").disabled = !(player1 && player2); }
-document.getElementById("btn-reset-pts").addEventListener("click", () => { player1 = null; player2 = null; drawFrame(document.getElementById("frame-canvas").getContext("2d"), frameImage); updatePointBadges(); });
+function updatePointBadges() { const b1 = document.getElementById("p1-badge"), b2 = document.getElementById("p2-badge"); const p1Label = playerConfig.player_1.name.substring(0, 10), p2Label = playerConfig.player_2.name.substring(0, 10); b1.textContent = player1 ? `${p1Label}: ✓ placed` : (activePlayer === 1 ? `${p1Label}: tap frame` : `${p1Label}: tap to set`); b1.className = `point-badge p1 ${player1 ? "set" : "unset"}${activePlayer === 1 ? " active" : ""}`; b2.textContent = player2 ? `${p2Label}: ✓ placed` : (activePlayer === 2 ? `${p2Label}: tap frame` : `${p2Label}: tap to set`); b2.className = `point-badge p2 ${player2 ? "set" : "unset"}${activePlayer === 2 ? " active" : ""}`; document.getElementById("btn-start").disabled = !(player1 && player2); }
+document.getElementById("p1-badge").addEventListener("click", () => setActivePlayer(1));
+document.getElementById("p2-badge").addEventListener("click", () => setActivePlayer(2));
+document.getElementById("btn-reset-pts").addEventListener("click", () => { player1 = null; player2 = null; setActivePlayer(1); drawFrame(document.getElementById("frame-canvas").getContext("2d"), frameImage); updatePointBadges(); });
 document.getElementById("btn-start").addEventListener("click", startProcessing);
-function startProcessing() {
+document.getElementById("btn-new-upload").addEventListener("click", () => showStep("upload"));
+async function startProcessing() {
+  // Upload thumbnail (current frame canvas with player dots drawn) and persist player config to Firestore.
+  // Fire-and-forget: don't block processing on thumbnail upload.
+  const canvas = document.getElementById("frame-canvas");
+  if (canvas && videoKey) {
+    uploadThumbnail(videoKey, canvas);
+    try {
+      await updateDoc(doc(fbFirestore, "videos", videoKey), { playerConfig });
+    } catch (err) { console.warn("playerConfig persist failed:", err); }
+  }
+
   showStep("process"); processingStartTime = Date.now(); totalSrcFrames = videoMeta.total_frames; completedSrcFrames = 0;
-  document.getElementById("preview-video").src = videoBlobUrl; updateOverallProgress(0, "Connecting...");
+  document.getElementById("preview-video").src = videoBlobUrl;
+  activeProcessingKey = videoKey; lastProgressPersist = 0;
+  updateVideoStatus(videoKey, "processing");
+
+  // Block until the source video upload finishes, then run /api/prepare (CPU-only ffprobe).
+  if (uploadPromise) {
+    updateOverallProgress(0, "Finishing upload...");
+    try {
+      await uploadPromise;
+    } catch (err) {
+      updateOverallProgress(0, `Upload failed: ${err.message}`);
+      updateVideoStatus(videoKey, "failed");
+      return;
+    }
+  }
+  updateOverallProgress(0, "Preparing video on server...");
+  try {
+    const prepResp = await fetch(`${API}/api/prepare`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job_id: jobId, gcs_path: firebasePath, video_key: videoKey, skip_first_frame: true }),
+    });
+    const meta = await prepResp.json();
+    if (meta.error) {
+      updateOverallProgress(0, `Error: ${meta.error}`);
+      updateVideoStatus(videoKey, "failed");
+      return;
+    }
+    // Prefer backend-derived metadata for the websocket payload (handles VFR / rotation).
+    if (meta.src_width) videoMeta = { ...videoMeta, ...meta };
+    totalSrcFrames = videoMeta.total_frames || totalSrcFrames;
+  } catch (err) {
+    updateOverallProgress(0, `Prepare failed: ${err.message}`);
+    updateVideoStatus(videoKey, "failed");
+    return;
+  }
+
+  updateOverallProgress(0, "Connecting...");
   const wsUrl = `${API.replace("http", "ws")}/ws/${jobId}`; ws = new WebSocket(wsUrl);
   ws.onopen = () => { updateOverallProgress(0, "Connected. Starting tracking..."); ws.send(JSON.stringify({ type: "start_processing", player_1: player1, player_2: player2, src_width: videoMeta.src_width, src_height: videoMeta.src_height, src_fps: videoMeta.src_fps, total_frames: videoMeta.total_frames, gcs_path: firebasePath, video_key: videoKey })); };
   ws.onmessage = (e) => handleWsMessage(JSON.parse(e.data));
@@ -1562,8 +4633,8 @@ function handleWsMessage(msg) {
     case "segment_start": currentSegSrcStart = msg.src_start; currentSegSrcFrames = msg.src_frames; currentSegPct = 0; updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, "Tracking players..."); break;
     case "segment_complete": completedSrcFrames = currentSegSrcStart + currentSegSrcFrames; updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, "Tracking players..."); break;
     case "needs_reprompt": showReprompt(msg); break;
-    case "complete": updateOverallProgress(100, "Complete!"); document.getElementById("overall-eta").textContent = ""; showResults(msg); break;
-    case "error": updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, `Error: ${msg.message}`); break;
+    case "complete": activeProcessingKey = null; updateOverallProgress(100, "Complete!"); document.getElementById("overall-eta").textContent = ""; updateVideoStatus(videoKey, "complete"); showResults(msg); break;
+    case "error": activeProcessingKey = null; updateOverallProgress(completedSrcFrames / Math.max(totalSrcFrames, 1) * 100, `Error: ${msg.message}`); updateVideoStatus(videoKey, "failed"); break;
   }
 }
 function showReprompt(msg) {
@@ -1582,8 +4653,13 @@ document.getElementById("btn-skip").addEventListener("click", () => { ws.send(JS
 function showResults(msg) {
   setTimeout(() => { 
     showStep("results"); 
-    const dur = ((Date.now() - processingStartTime) / 1000 / 60).toFixed(1); 
-    document.getElementById("results-summary").textContent = `Tracking complete. Processed in ${dur} minutes.`;
+    // processingStartTime is 0 when opening an already-processed video from My Videos.
+    if (processingStartTime > 0) {
+      const dur = ((Date.now() - processingStartTime) / 1000 / 60).toFixed(1);
+      document.getElementById("results-summary").textContent = `Tracking complete. Processed in ${dur} minutes.`;
+    } else {
+      document.getElementById("results-summary").textContent = "Viewing tracked results.";
+    }
     
     const pvVideo = document.getElementById("pv-video");
     const pvPlay = document.getElementById("pv-play");
@@ -1649,6 +4725,11 @@ function showResults(msg) {
           document.getElementById("pv-points-count").textContent = points.length + " points";
           renderPointsList();
           updateButtons();
+          const ptTotEl = document.getElementById('dash-point-total');
+          if (ptTotEl) ptTotEl.textContent = points.length;
+          if (points.length > 0 && dashState.currentPointNum == null) {
+            setCurrentPoint(0);
+          }
           return; // Success!
           
         } catch (e) {
@@ -1674,12 +4755,472 @@ function showResults(msg) {
     // Start loading
     loadPoints();
     
-    // Load match overview (aggregate stats)
+    // ===================== Dashboard module =====================
+    // Live, video-synced spatial panels + match/point/notes stats toggle.
+    // Replaces the old static `pv-match-overview` block.
+
+    const dashState = {
+      filter: { p1: true, p2: true },
+      scope: 'match',
+      currentPointNum: null,   // 1-based, set when a point becomes "current"
+      currentPointData: null,  // cached rally for current point (null until loaded)
+      currentPointStart: 0,
+      matchAggregates: null,
+      p1Name: 'Player 1',
+      p2Name: 'Player 2',
+      rafPending: false,
+    };
+
+    const NOTES_LS_KEY = `boastiq-notes-${videoKey || 'unknown'}`;
+    let notesStore = {};
+    try { notesStore = JSON.parse(localStorage.getItem(NOTES_LS_KEY) || '{}'); } catch (_) { notesStore = {}; }
+
+    const STARS_LS_KEY = `boastiq-stars-${videoKey || 'unknown'}`;
+    let starredPoints = new Set();
+    try {
+      const arr = JSON.parse(localStorage.getItem(STARS_LS_KEY) || '[]');
+      if (Array.isArray(arr)) starredPoints = new Set(arr.map(String));
+    } catch (_) { starredPoints = new Set(); }
+    function saveStars() {
+      try { localStorage.setItem(STARS_LS_KEY, JSON.stringify([...starredPoints])); } catch (_) {}
+    }
+    function toggleStar(pointNum) {
+      const k = String(pointNum);
+      if (starredPoints.has(k)) starredPoints.delete(k); else starredPoints.add(k);
+      saveStars();
+    }
+    function syncViewerStar() {
+      const btn = document.getElementById('dash-viewer-star');
+      if (!btn) return;
+      const n = dashState.currentPointNum;
+      const on = n != null && starredPoints.has(String(n));
+      btn.classList.toggle('starred', on);
+      btn.textContent = on ? '★' : '☆';
+      btn.title = `${on ? 'Unstar' : 'Star'} this point`;
+      btn.disabled = n == null;
+    }
+    function syncDrawerStar(pointNum) {
+      const btn = document.querySelector(`.pv-star-btn[data-point-number="${pointNum}"]`);
+      if (!btn) return;
+      const on = starredPoints.has(String(pointNum));
+      btn.classList.toggle('starred', on);
+      btn.textContent = on ? '★' : '☆';
+      btn.title = `${on ? 'Unstar' : 'Star'} this point`;
+      const item = btn.closest('.pv-point-item');
+      if (item) item.classList.toggle('starred', on);
+    }
+
+    // ---- Coordinate helpers (court viewBox 640x975, wall viewBox 640x457) ----
+    const cX = m => (m / 6.4) * 640;
+    const cY = m => (m / 9.75) * 975;       // y=0 = front wall (top)
+    const wX = m => (m / 6.4) * 640;
+    const wY = m => 457 - (m / 4.57) * 457; // floor at bottom
+
+    function courtShellSvg(innerHtml) {
+      return `
+        <svg viewBox="0 0 640 975" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <radialGradient id="dash-heat-p1"><stop offset="0%" stop-color="#00f0ff" stop-opacity="0.14"/><stop offset="60%" stop-color="#00f0ff" stop-opacity="0.06"/><stop offset="100%" stop-color="#00f0ff" stop-opacity="0"/></radialGradient>
+            <radialGradient id="dash-heat-p2"><stop offset="0%" stop-color="#ff2e93" stop-opacity="0.14"/><stop offset="60%" stop-color="#ff2e93" stop-opacity="0.06"/><stop offset="100%" stop-color="#ff2e93" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect class="dash-court-bg" x="10" y="10" width="620" height="955"/>
+          <rect class="dash-court-line" x="10" y="10" width="620" height="955"/>
+          <line class="dash-court-line" x1="10" y1="544" x2="630" y2="544"/>
+          <line class="dash-court-line" x1="320" y1="544" x2="320" y2="965"/>
+          <rect class="dash-court-line" x="10" y="544" width="160" height="160"/>
+          <rect class="dash-court-line" x="470" y="544" width="160" height="160"/>
+          ${innerHtml || ''}
+        </svg>`;
+    }
+    function wallShellSvg(innerHtml) {
+      // service line at 1.78m from floor → y=279. tin at 0.48m strip at bottom.
+      return `
+        <svg viewBox="0 0 640 457" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <rect class="dash-court-bg" x="10" y="10" width="620" height="437"/>
+          <rect class="dash-court-line" x="10" y="10" width="620" height="437"/>
+          <line class="dash-court-line" x1="10" y1="279" x2="630" y2="279"/>
+          <rect class="dash-tin" x="10" y="409" width="620" height="38"/>
+          ${innerHtml || ''}
+        </svg>`;
+    }
+
+    function renderDashHeatmap() {
+      const host = document.getElementById('dash-heatmap-svg');
+      if (!host) return;
+      const pt = dashState.currentPointData;
+      const tInPoint = Math.max(0, pvVideo.currentTime - (dashState.currentPointStart || 0));
+      if (!pt) { host.innerHTML = courtShellSvg(''); return; }
+
+      const SAMPLE_HZ = 5;
+      const HEAT_STRIDE = 2;
+      const TRAIL_SEC = 0.5;
+
+      function blobsFor(player, gradId) {
+        if (!dashState.filter[player === 'player_1' ? 'p1' : 'p2']) return '';
+        const m = pt.movement && pt.movement[player];
+        if (!m || !Array.isArray(m.x) || !Array.isArray(m.y)) return '';
+        const n = Math.min(m.x.length, m.y.length);
+        const tIdxF = tInPoint * SAMPLE_HZ;
+        const cutoff = Math.min(n - 1, Math.floor(tIdxF));
+        const frac = Math.max(0, Math.min(1, tIdxF - Math.floor(tIdxF)));
+        let out = '';
+        for (let i = 0; i <= cutoff; i += HEAT_STRIDE) {
+          const x = m.x[i], y = m.y[i];
+          if (x == null || y == null) continue;
+          out += `<circle cx="${cX(x).toFixed(1)}" cy="${cY(y).toFixed(1)}" r="60" fill="url(#${gradId})"/>`;
+        }
+        // Partial fade-in blob for the about-to-arrive sample
+        if (cutoff + 1 < n) {
+          const x = m.x[cutoff + 1], y = m.y[cutoff + 1];
+          if (x != null && y != null && (cutoff + 1) % HEAT_STRIDE === 0) {
+            out += `<circle cx="${cX(x).toFixed(1)}" cy="${cY(y).toFixed(1)}" r="60" fill="url(#${gradId})" opacity="${frac.toFixed(2)}"/>`;
+          }
+        }
+        return out;
+      }
+      function trailFor(player, trailCls, headCls) {
+        if (!dashState.filter[player === 'player_1' ? 'p1' : 'p2']) return '';
+        const m = pt.movement && pt.movement[player];
+        if (!m || !Array.isArray(m.x) || !Array.isArray(m.y)) return '';
+        const n = Math.min(m.x.length, m.y.length);
+        const tIdxF = tInPoint * SAMPLE_HZ;
+        const head = Math.min(n - 1, Math.floor(tIdxF));
+        const frac = Math.max(0, Math.min(1, tIdxF - Math.floor(tIdxF)));
+        const startIdx = Math.max(0, head - Math.floor(TRAIL_SEC * SAMPLE_HZ));
+        const pts = [];
+        for (let i = startIdx; i <= head; i++) {
+          const x = m.x[i], y = m.y[i];
+          if (x == null || y == null) continue;
+          pts.push([cX(x), cY(y)]);
+        }
+        // Interpolate the head position toward the next sample so motion is smooth between 5Hz samples.
+        if (head + 1 < n && m.x[head + 1] != null && m.y[head + 1] != null && pts.length) {
+          const nx = cX(m.x[head + 1]);
+          const ny = cY(m.y[head + 1]);
+          const lx = pts[pts.length - 1][0];
+          const ly = pts[pts.length - 1][1];
+          pts.push([lx + (nx - lx) * frac, ly + (ny - ly) * frac]);
+        }
+        if (pts.length === 0) return '';
+        const polyPts = pts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+        const last = pts[pts.length - 1];
+        return `<polyline class="${trailCls}" points="${polyPts}" opacity="0.85"/>
+                <circle class="${headCls}" cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="12"/>`;
+      }
+
+      const inner = blobsFor('player_1', 'dash-heat-p1')
+                  + blobsFor('player_2', 'dash-heat-p2')
+                  + trailFor('player_1', 'dash-trail-p1', 'dash-head-p1')
+                  + trailFor('player_2', 'dash-trail-p2', 'dash-head-p2');
+      host.innerHTML = courtShellSvg(inner);
+    }
+
+    function renderDashShots() {
+      const wallHost = document.getElementById('dash-wall-svg');
+      const floorHost = document.getElementById('dash-floor-svg');
+      if (!wallHost || !floorHost) return;
+      const pt = dashState.currentPointData;
+      if (!pt) { wallHost.innerHTML = wallShellSvg(''); floorHost.innerHTML = courtShellSvg(''); return; }
+
+      const tCur = pvVideo.currentTime;
+      const rally = pt.rally || [];
+      const wallParts = [], floorParts = [];
+      for (const s of rally) {
+        const key = s.hit_by === 'player_1' ? 'p1' : 'p2';
+        if (!dashState.filter[key]) continue;
+        const color = key === 'p1' ? '#00f0ff' : '#ff2e93';
+        const hitT = (typeof s.hit_time_sec === 'number') ? s.hit_time_sec : -Infinity;
+        const dt = tCur - hitT;
+        if (dt < -0.05) continue;
+        const recent = dt >= 0 && dt < 0.6;
+        const r = recent ? 18 : 12;
+        const shadow = recent ? `filter="drop-shadow(0 0 12px ${color})"` : '';
+        if (s.front_wall_contact && s.front_wall_contact.x != null) {
+          const fw = s.front_wall_contact;
+          wallParts.push(`<circle cx="${wX(fw.x).toFixed(1)}" cy="${wY(fw.y).toFixed(1)}" r="${r}" fill="${color}" opacity="0.9" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" ${shadow}/>`);
+        }
+        if (s.floor_bounce && s.floor_bounce.x != null) {
+          const fb = s.floor_bounce;
+          floorParts.push(`<circle cx="${cX(fb.x).toFixed(1)}" cy="${cY(fb.y).toFixed(1)}" r="${r}" fill="${color}" opacity="0.9" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" ${shadow}/>`);
+        }
+      }
+      wallHost.innerHTML = wallShellSvg(wallParts.join(''));
+      floorHost.innerHTML = courtShellSvg(floorParts.join(''));
+    }
+
+    function renderDashAll() { renderDashHeatmap(); renderDashShots(); }
+    function scheduleDashRender() {
+      if (dashState.rafPending) return;
+      dashState.rafPending = true;
+      requestAnimationFrame(() => { dashState.rafPending = false; renderDashAll(); });
+    }
+    // Continuous render loop while the video is playing — gives the heatmap
+    // smooth interpolated motion between 5Hz movement samples instead of
+    // ticking only on the ~4Hz `timeupdate` event.
+    let dashRafId = null;
+    function dashTick() {
+      renderDashHeatmap();
+      dashRafId = requestAnimationFrame(dashTick);
+    }
+    function startDashLoop() { if (dashRafId == null) dashRafId = requestAnimationFrame(dashTick); }
+    function stopDashLoop() { if (dashRafId != null) { cancelAnimationFrame(dashRafId); dashRafId = null; } }
+
+    function buildPointStats(pt) {
+      if (!pt) return null;
+      const rally = pt.rally || [];
+      const dist = (player) => {
+        const md = movementDistance(pt, player);
+        if (md != null) return md;
+        let total = 0;
+        const pk = player === 'player_1' ? 'player_1_position' : 'player_2_position';
+        for (let i = 1; i < rally.length; i++) {
+          const a = rally[i-1][pk], b = rally[i][pk];
+          if (a && b && a.x != null && b.x != null) {
+            const dx = b.x - a.x, dy = b.y - a.y;
+            total += Math.sqrt(dx*dx + dy*dy);
+          }
+        }
+        return total;
+      };
+      const classOf = (player, cls) =>
+        rally.filter(s => s.hit_by === player && s.shot_class === cls).length;
+      return {
+        duration: `${(pt.duration_sec || 0).toFixed(1)} s`,
+        totalShots: rally.length,
+        avgRally: `${(pt.duration_sec || 0).toFixed(1)} s`,
+        distP1: `${dist('player_1').toFixed(1)} m`,
+        distP2: `${dist('player_2').toFixed(1)} m`,
+        drives:  { p1: classOf('player_1', 'drive'),  p2: classOf('player_2', 'drive') },
+        drops:   { p1: classOf('player_1', 'drop'),   p2: classOf('player_2', 'drop') },
+        boasts:  { p1: classOf('player_1', 'boast'),  p2: classOf('player_2', 'boast') },
+        volleys: { p1: classOf('player_1', 'volley'), p2: classOf('player_2', 'volley') },
+      };
+    }
+
+    function renderStatsPanel(scope) {
+      dashState.scope = scope;
+      const body = document.getElementById('dash-stats-body');
+      if (!body) return;
+
+      if (scope === 'notes') {
+        const n = dashState.currentPointNum;
+        if (!n) { body.innerHTML = `<div class="dash-loading">Load a point to write notes.</div>`; return; }
+        const val = notesStore[String(n)] || '';
+        const esc = (s) => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+        body.innerHTML = `
+          <div class="dash-notes-pane">
+            <div class="dash-notes-header">
+              <span>Note for Point #${n}</span>
+              <span class="dash-notes-status" id="dash-notes-status">${val ? 'saved' : 'no note yet'}</span>
+            </div>
+            <textarea class="dash-notes-textarea" id="dash-notes-textarea" placeholder="What happened this point? Tactics, footwork, what to work on…">${esc(val)}</textarea>
+          </div>`;
+        const ta = document.getElementById('dash-notes-textarea');
+        const status = document.getElementById('dash-notes-status');
+        ta.addEventListener('input', () => {
+          if (ta.value) notesStore[String(n)] = ta.value;
+          else delete notesStore[String(n)];
+          try { localStorage.setItem(NOTES_LS_KEY, JSON.stringify(notesStore)); } catch (_) {}
+          status.textContent = ta.value ? 'saved' : 'no note yet';
+        });
+        return;
+      }
+
+      let s = null;
+      if (scope === 'point') {
+        s = buildPointStats(dashState.currentPointData);
+        if (!s) { body.innerHTML = `<div class="dash-loading">Loading point stats…</div>`; return; }
+      } else {
+        if (!dashState.matchAggregates) { body.innerHTML = `<div class="dash-loading">Aggregating match stats…</div>`; return; }
+        s = dashState.matchAggregates;
+      }
+
+      const card = (l, b) => `<div class="dash-stat-card"><div class="dash-stat-label">${l}</div>${b}</div>`;
+      const dual = (a, b) => `
+        <div class="dash-stat-rows">
+          <div class="dash-stat-row"><span class="dash-stat-name"><span class="dash-dot dash-dot-p1"></span>${dashState.p1Name}</span><span class="dash-stat-value">${a}</span></div>
+          <div class="dash-stat-row"><span class="dash-stat-name"><span class="dash-dot dash-dot-p2"></span>${dashState.p2Name}</span><span class="dash-stat-value">${b}</span></div>
+        </div>`;
+      const one = v => `<div class="dash-stat-value-big">${v}</div>`;
+      body.innerHTML = `<div class="dash-stats-grid">${[
+        card('Duration', one(s.duration)),
+        card('Total shots', one(s.totalShots)),
+        card('Avg rally', one(s.avgRally || s.duration)),
+        card('Distance', dual(s.distP1, s.distP2)),
+        card('Drives', dual(s.drives.p1, s.drives.p2)),
+        card('Drops', dual(s.drops.p1, s.drops.p2)),
+        card('Boasts', dual(s.boasts.p1, s.boasts.p2)),
+        card('Volleys', dual(s.volleys.p1, s.volleys.p2)),
+      ].join('')}</div>`;
+    }
+
+    async function loadMatchAggregates() {
+      try {
+        const indexResp = await fetch(`${API}/api/points/${videoKey}/index`);
+        if (!indexResp.ok) { await new Promise(r => setTimeout(r, 5000)); return loadMatchAggregates(); }
+        const indexData = await indexResp.json();
+        const totalPoints = indexData.total_points || 0;
+        document.getElementById('dash-point-total').textContent = totalPoints || '–';
+        if (totalPoints === 0) return;
+
+        dashState.p1Name = indexData.player_1?.name || playerConfig.player_1?.name || 'Player 1';
+        dashState.p2Name = indexData.player_2?.name || playerConfig.player_2?.name || 'Player 2';
+        document.querySelectorAll('.dash-fname-p1').forEach(el => { el.textContent = dashState.p1Name; });
+        document.querySelectorAll('.dash-fname-p2').forEach(el => { el.textContent = dashState.p2Name; });
+
+        // Fast path: backend precomputed the aggregation into index.json at
+        // processing time — render immediately, no per-point fetches.
+        if (indexData.match_summary) {
+          dashState.matchAggregates = indexData.match_summary;
+          if (dashState.scope === 'match') renderStatsPanel('match');
+          if (dashState.currentPointNum == null && Array.isArray(points) && points.length > 0) {
+            setCurrentPoint(0);
+          }
+          return;
+        }
+
+        // Fallback for videos processed before match_summary was embedded.
+        // Fetch all rallies in parallel (used to be sequential) and aggregate
+        // client-side.
+        const rallyResults = await Promise.all(
+          Array.from({ length: totalPoints }, (_, i) =>
+            fetch(`${API}/api/points/${videoKey}/${i + 1}`)
+              .then(r => r.ok ? r.json() : null)
+              .catch(() => null)
+          )
+        );
+        const allRallies = [];
+        rallyResults.forEach((data, idx) => {
+          if (data) {
+            allRallies.push(data);
+            pointRallyCache[idx + 1] = data;
+          }
+        });
+        if (allRallies.length === 0) return;
+
+        const durations = allRallies.map(r => r.duration_sec || 0);
+        const totalDur = durations.reduce((a, b) => a + b, 0);
+        const avgDur = totalDur / durations.length;
+
+        let p1Shots = 0, p2Shots = 0;
+        let p1Dist = 0, p2Dist = 0;
+        const cls = { p1: {drive:0,drop:0,boast:0,volley:0}, p2: {drive:0,drop:0,boast:0,volley:0} };
+        allRallies.forEach(rd => {
+          (rd.rally || []).forEach(shot => {
+            const k = shot.hit_by === 'player_1' ? 'p1' : 'p2';
+            if (k === 'p1') p1Shots++; else p2Shots++;
+            if (shot.shot_class && cls[k][shot.shot_class] != null) cls[k][shot.shot_class]++;
+          });
+          const d1 = movementDistance(rd, 'player_1');
+          const d2 = movementDistance(rd, 'player_2');
+          if (d1 != null) p1Dist += d1;
+          if (d2 != null) p2Dist += d2;
+        });
+
+        dashState.matchAggregates = {
+          duration: formatTime(totalDur),
+          totalShots: p1Shots + p2Shots,
+          avgRally: `${avgDur.toFixed(1)} s`,
+          distP1: `${p1Dist.toFixed(0)} m`,
+          distP2: `${p2Dist.toFixed(0)} m`,
+          drives:  { p1: cls.p1.drive,  p2: cls.p2.drive },
+          drops:   { p1: cls.p1.drop,   p2: cls.p2.drop },
+          boasts:  { p1: cls.p1.boast,  p2: cls.p2.boast },
+          volleys: { p1: cls.p1.volley, p2: cls.p2.volley },
+        };
+        if (dashState.scope === 'match') renderStatsPanel('match');
+
+        // If no point selected yet but we have points, set the first as current.
+        if (dashState.currentPointNum == null && Array.isArray(points) && points.length > 0) {
+          setCurrentPoint(0);
+        }
+      } catch (e) {
+        console.error('Failed to load match aggregates:', e);
+      }
+    }
+
+    function updateScrubBounds() {
+      const scrub = document.getElementById('dash-scrub');
+      if (!scrub) return;
+      const start = dashState.currentPointStart || 0;
+      const dur = (dashState.currentPointData && dashState.currentPointData.duration_sec) || 0;
+      const end = start + Math.max(dur, 0.1);
+      scrub.min = start;
+      scrub.max = end;
+    }
+
+    async function setCurrentPoint(pointIdx) {
+      const pt = points[pointIdx];
+      if (!pt) return;
+      dashState.currentPointNum = pt.point_number;
+      dashState.currentPointStart = pt.timestamp_sec;
+      const ptCurEl = document.getElementById('dash-point-cur');
+      if (ptCurEl) ptCurEl.textContent = pt.point_number;
+
+      let data = pointRallyCache[pt.point_number];
+      if (!data) {
+        try {
+          const r = await fetch(`${API}/api/points/${videoKey}/${pt.point_number}`);
+          if (r.ok) { data = await r.json(); pointRallyCache[pt.point_number] = data; }
+        } catch (e) { /* ignore */ }
+      }
+      dashState.currentPointData = data || null;
+      updateScrubBounds();
+      syncViewerStar();
+      renderDashAll();
+      if (dashState.scope === 'point' || dashState.scope === 'notes') renderStatsPanel(dashState.scope);
+    }
+
+    function setupDashFilters() {
+      const sync = (key, val) => {
+        dashState.filter[key] = val;
+        document.querySelectorAll(`.dash-filter-${key}`).forEach(cb => { cb.checked = val; });
+        renderDashAll();
+      };
+      document.querySelectorAll('.dash-filter-p1').forEach(cb => cb.addEventListener('change', e => sync('p1', e.target.checked)));
+      document.querySelectorAll('.dash-filter-p2').forEach(cb => cb.addEventListener('change', e => sync('p2', e.target.checked)));
+    }
+    function setupDashStatsToggle() {
+      document.querySelectorAll('#dash-stats-toggle button').forEach(b => {
+        b.addEventListener('click', () => {
+          document.querySelectorAll('#dash-stats-toggle button').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          renderStatsPanel(b.dataset.scope);
+        });
+      });
+    }
+
+    function setupViewerStar() {
+      const btn = document.getElementById('dash-viewer-star');
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        const n = dashState.currentPointNum;
+        if (n == null) return;
+        toggleStar(n);
+        syncViewerStar();
+        syncDrawerStar(n);
+      });
+    }
+
+    function initDashboard() {
+      document.getElementById('dash-heatmap-svg').innerHTML = courtShellSvg('');
+      document.getElementById('dash-wall-svg').innerHTML = wallShellSvg('');
+      document.getElementById('dash-floor-svg').innerHTML = courtShellSvg('');
+      setupDashFilters();
+      setupDashStatsToggle();
+      setupViewerStar();
+      syncViewerStar();
+    }
+    initDashboard();
+    // ===================== /Dashboard module =====================
+
+    // Stub kept to swallow any external call; new aggregator does the work.
     async function loadMatchOverview() {
       const overviewLoading = document.getElementById("pv-overview-loading");
       const overviewContent = document.getElementById("pv-overview-content");
       const overviewSummary = document.getElementById("pv-overview-summary");
       const overviewPlayers = document.getElementById("pv-overview-players");
+      if (!overviewLoading) return; // old DOM is gone — dashboard handles this now
       
       try {
         // First try to fetch the points index
@@ -1770,31 +5311,60 @@ function showResults(msg) {
               }
             }
             
-            // Collect positions
-            if (shot.player_1_position && shot.player_1_position.x != null) {
-              p1Positions.push(shot.player_1_position);
-            }
-            if (shot.player_2_position && shot.player_2_position.x != null) {
-              p2Positions.push(shot.player_2_position);
-            }
           });
-          
-          // Calculate distance for this rally
-          for (let i = 1; i < rally.length; i++) {
-            const prev1 = rally[i-1].player_1_position;
-            const curr1 = rally[i].player_1_position;
-            if (prev1 && curr1 && prev1.x != null && curr1.x != null) {
-              const dx = (curr1.x || 0) - (prev1.x || 0);
-              const dy = (curr1.y || 0) - (prev1.y || 0);
-              p1TotalDistance += Math.sqrt(dx*dx + dy*dy);
+
+          // Heatmap positions: prefer dense movement track if backend
+          // embedded it (player_locations.json @ 5 Hz). Fall back to
+          // per-shot hit snapshots for older points.
+          const p1Move = movementPositions(rallyData, "player_1");
+          const p2Move = movementPositions(rallyData, "player_2");
+          if (p1Move.length) {
+            p1Positions.push(...p1Move);
+          } else {
+            rally.forEach(shot => {
+              if (shot.player_1_position && shot.player_1_position.x != null) {
+                p1Positions.push(shot.player_1_position);
+              }
+            });
+          }
+          if (p2Move.length) {
+            p2Positions.push(...p2Move);
+          } else {
+            rally.forEach(shot => {
+              if (shot.player_2_position && shot.player_2_position.x != null) {
+                p2Positions.push(shot.player_2_position);
+              }
+            });
+          }
+
+          // Distance: dense movement track when available, else summed
+          // per-shot snapshot deltas.
+          const p1Dm = movementDistance(rallyData, "player_1");
+          const p2Dm = movementDistance(rallyData, "player_2");
+          if (p1Dm != null) {
+            p1TotalDistance += p1Dm;
+          } else {
+            for (let i = 1; i < rally.length; i++) {
+              const prev1 = rally[i-1].player_1_position;
+              const curr1 = rally[i].player_1_position;
+              if (prev1 && curr1 && prev1.x != null && curr1.x != null) {
+                const dx = (curr1.x || 0) - (prev1.x || 0);
+                const dy = (curr1.y || 0) - (prev1.y || 0);
+                p1TotalDistance += Math.sqrt(dx*dx + dy*dy);
+              }
             }
-            
-            const prev2 = rally[i-1].player_2_position;
-            const curr2 = rally[i].player_2_position;
-            if (prev2 && curr2 && prev2.x != null && curr2.x != null) {
-              const dx = (curr2.x || 0) - (prev2.x || 0);
-              const dy = (curr2.y || 0) - (prev2.y || 0);
-              p2TotalDistance += Math.sqrt(dx*dx + dy*dy);
+          }
+          if (p2Dm != null) {
+            p2TotalDistance += p2Dm;
+          } else {
+            for (let i = 1; i < rally.length; i++) {
+              const prev2 = rally[i-1].player_2_position;
+              const curr2 = rally[i].player_2_position;
+              if (prev2 && curr2 && prev2.x != null && curr2.x != null) {
+                const dx = (curr2.x || 0) - (prev2.x || 0);
+                const dy = (curr2.y || 0) - (prev2.y || 0);
+                p2TotalDistance += Math.sqrt(dx*dx + dy*dy);
+              }
             }
           }
         });
@@ -1972,7 +5542,7 @@ function showResults(msg) {
     }
     
     // Start loading match overview after points are loaded
-    setTimeout(() => loadMatchOverview(), 1000);
+    setTimeout(() => loadMatchAggregates(), 1000);
     
     function formatTime(sec) {
       const m = Math.floor(sec / 60);
@@ -1982,18 +5552,27 @@ function showResults(msg) {
     
     function renderPointsList() {
       pvList.innerHTML = points.map((p, i) => {
+        // Prefer the v2 detector's calm-period end (real rally cutoff).
+        // Fall back to next-point start, then video duration.
         const nextPoint = points[i + 1];
-        const endTime = nextPoint ? nextPoint.timestamp_sec : (pvVideo.duration || p.timestamp_sec + 30);
+        const fallbackEnd = nextPoint ? nextPoint.timestamp_sec : (pvVideo.duration || p.timestamp_sec + 30);
+        const calmEnd = p.point_end_timestamp_sec;
+        const endTime = (calmEnd != null && calmEnd > p.timestamp_sec)
+          ? Math.min(calmEnd, fallbackEnd)
+          : fallbackEnd;
         const duration = (endTime - p.timestamp_sec).toFixed(1);
         
-        return `<div class="pv-point-item" data-index="${i}" data-point-number="${p.point_number}">
+        const isStarred = starredPoints.has(String(p.point_number));
+        return `<div class="pv-point-item${isStarred ? ' starred' : ''}" data-index="${i}" data-point-number="${p.point_number}">
           <div class="pv-point-header">
             <div class="pv-point-header-left">
+              <button class="pv-star-btn${isStarred ? ' starred' : ''}" data-point-number="${p.point_number}" title="${isStarred ? 'Unstar' : 'Star'} this point" aria-label="${isStarred ? 'Unstar' : 'Star'} point ${p.point_number}">${isStarred ? '★' : '☆'}</button>
               <span class="pv-point-label">Point ${p.point_number}</span>
               <span class="pv-point-time" data-time="${p.timestamp_sec}">${formatTime(p.timestamp_sec)}</span>
             </div>
             <div class="pv-point-header-right">
               <span class="pv-point-duration">${duration}s</span>
+              <button class="pv-share-clip-btn" data-point-number="${p.point_number}" title="Share this point as a public clip" aria-label="Share point ${p.point_number}">↗ Share</button>
               <span class="pv-expand-icon">▼</span>
             </div>
           </div>
@@ -2024,6 +5603,7 @@ function showResults(msg) {
           // Update current point and go to video time
           currentPointIndex = idx;
           highlightCurrentPoint();
+          setCurrentPoint(idx);
         });
       });
       
@@ -2036,6 +5616,56 @@ function showResults(msg) {
           pvVideo.play();
         });
       });
+
+      // Star buttons: toggle without expanding the card
+      pvList.querySelectorAll(".pv-star-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const pnum = parseInt(btn.dataset.pointNumber);
+          toggleStar(pnum);
+          syncDrawerStar(pnum);
+          if (pnum === dashState.currentPointNum) syncViewerStar();
+        });
+      });
+
+      // Share-clip buttons: trigger a backend render (cached) and
+      // copy a public viewer URL to clipboard.
+      pvList.querySelectorAll(".pv-share-clip-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const pnum = parseInt(btn.dataset.pointNumber);
+          shareClipForPoint(pnum, btn);
+        });
+      });
+    }
+
+    async function shareClipForPoint(pointNumber, btnEl) {
+      const originalLabel = btnEl ? btnEl.textContent : null;
+      const setLabel = (s) => { if (btnEl) btnEl.textContent = s; };
+      try {
+        setLabel("Rendering…");
+        if (btnEl) btnEl.disabled = true;
+        const r = await fetch(`${API}/api/clip/${videoKey}/${pointNumber}`);
+        const data = await r.json();
+        if (!r.ok || data.status === "error") {
+          throw new Error(data.message || `HTTP ${r.status}`);
+        }
+        // Recipient URL: a sharable viewer page that needs no login.
+        const shareURL = `${window.location.origin}/?clip=${encodeURIComponent(videoKey)}&point=${pointNumber}`;
+        try {
+          await navigator.clipboard.writeText(shareURL);
+          setLabel("✓ Copied");
+        } catch (clipErr) {
+          // Some browsers block clipboard from non-https or non-user-gesture.
+          prompt("Copy this share link:", shareURL);
+          setLabel("✓ Ready");
+        }
+        setTimeout(() => { setLabel(originalLabel || "↗ Share"); if (btnEl) btnEl.disabled = false; }, 2000);
+      } catch (err) {
+        console.error("shareClipForPoint failed:", err);
+        setLabel("Failed");
+        setTimeout(() => { setLabel(originalLabel || "↗ Share"); if (btnEl) btnEl.disabled = false; }, 2000);
+      }
     }
     
     // Cache for loaded point rallies
@@ -2077,18 +5707,28 @@ function showResults(msg) {
       const p2Forehand = p2Shots.filter(s => s.shot_type === "forehand");
       const p2Backhand = p2Shots.filter(s => s.shot_type === "backhand");
       
-      // Calculate distance (sum of position changes)
-      const p1Distance = calculateDistance(rally, "player_1");
-      const p2Distance = calculateDistance(rally, "player_2");
-      
+      // Distance: prefer the dense movement track (player_locations.json
+      // sampled at 5 Hz) when present; else fall back to summing the
+      // per-shot snapshot deltas.
+      const p1MoveDist = movementDistance(data, "player_1");
+      const p2MoveDist = movementDistance(data, "player_2");
+      const p1Distance = p1MoveDist != null ? p1MoveDist.toFixed(1) : calculateDistance(rally, "player_1");
+      const p2Distance = p2MoveDist != null ? p2MoveDist.toFixed(1) : calculateDistance(rally, "player_2");
+
       // Determine winner (last shot hitter loses typically, but we'll mark last hitter for now)
       const lastShot = rally[rally.length - 1];
       const winner = lastShot?.hit_by === "player_1" ? p2Name : p1Name;
       const winnerClass = lastShot?.hit_by === "player_1" ? "color:var(--blue)" : "color:var(--red)";
-      
-      // Generate heatmap data - positions
-      const p1Positions = rally.map(s => s.player_1_position).filter(p => p && p.x != null);
-      const p2Positions = rally.map(s => s.player_2_position).filter(p => p && p.x != null);
+
+      // Heatmap positions: prefer the dense movement track so the heatmap
+      // reflects where the player actually spent time, not just where they
+      // happened to be when striking the ball.
+      const p1MovePos = movementPositions(data, "player_1");
+      const p2MovePos = movementPositions(data, "player_2");
+      const p1Positions = p1MovePos.length ? p1MovePos
+        : rally.map(s => s.player_1_position).filter(p => p && p.x != null);
+      const p2Positions = p2MovePos.length ? p2MovePos
+        : rally.map(s => s.player_2_position).filter(p => p && p.x != null);
       
       // Collect front wall contacts and floor bounces per player
       const p1FrontWall = p1Shots.map(s => s.front_wall_contact).filter(p => p && p.x != null);
@@ -2131,7 +5771,7 @@ function showResults(msg) {
     function calculateDistance(rally, player) {
       let totalDist = 0;
       const posKey = player === "player_1" ? "player_1_position" : "player_2_position";
-      
+
       for (let i = 1; i < rally.length; i++) {
         const prev = rally[i-1][posKey];
         const curr = rally[i][posKey];
@@ -2142,6 +5782,43 @@ function showResults(msg) {
         }
       }
       return totalDist.toFixed(1);
+    }
+
+    // Movement track (player_locations.json downsampled) → {x,y} array.
+    // Returns [] when the point has no embedded movement block.
+    function movementPositions(pointData, player) {
+      const m = pointData && pointData.movement;
+      if (!m) return [];
+      const p = m[player];
+      if (!p || !Array.isArray(p.x) || !Array.isArray(p.y)) return [];
+      const out = [];
+      const n = Math.min(p.x.length, p.y.length);
+      for (let i = 0; i < n; i++) {
+        if (p.x[i] != null && p.y[i] != null) out.push({ x: p.x[i], y: p.y[i] });
+      }
+      return out;
+    }
+
+    // Distance computed from the dense movement track; falls back to
+    // per-shot snapshots when movement is missing.
+    function movementDistance(pointData, player) {
+      const m = pointData && pointData.movement;
+      const p = m && m[player];
+      if (!p || !Array.isArray(p.x) || !Array.isArray(p.y) || p.x.length < 2) {
+        return null;
+      }
+      let total = 0;
+      let lastX = null, lastY = null;
+      for (let i = 0; i < p.x.length; i++) {
+        const x = p.x[i], y = p.y[i];
+        if (x == null || y == null) { lastX = null; lastY = null; continue; }
+        if (lastX != null) {
+          const dx = x - lastX, dy = y - lastY;
+          total += Math.sqrt(dx*dx + dy*dy);
+        }
+        lastX = x; lastY = y;
+      }
+      return total;
     }
     
     function renderPlayerStats(playerClass, name, distance, totalShots, forehands, backhands, positions, frontWallHits, floorBounces, pointNum) {
@@ -2319,141 +5996,98 @@ function showResults(msg) {
           <rect x="10" y="10" width="620" height="955" fill="none" stroke="#404040" stroke-width="8"/>
           
           <!-- Short line -->
-          <line x1="10" y1="549" x2="630" y2="549" stroke="#404040" stroke-width="5"/>
+          <line x1="10" y1="544" x2="630" y2="544" stroke="#404040" stroke-width="5"/>
           
           <!-- Half court line -->
-          <line x1="320" y1="549" x2="320" y2="965" stroke="#404040" stroke-width="5"/>
+          <line x1="320" y1="544" x2="320" y2="965" stroke="#404040" stroke-width="5"/>
           
           <!-- Left service box -->
-          <line x1="10" y1="709" x2="170" y2="709" stroke="#404040" stroke-width="5"/>
-          <line x1="170" y1="549" x2="170" y2="709" stroke="#404040" stroke-width="5"/>
+          <line x1="10" y1="704" x2="170" y2="704" stroke="#404040" stroke-width="5"/>
+          <line x1="170" y1="544" x2="170" y2="704" stroke="#404040" stroke-width="5"/>
           
           <!-- Right service box -->
-          <line x1="470" y1="549" x2="470" y2="709" stroke="#404040" stroke-width="5"/>
-          <line x1="470" y1="709" x2="630" y2="709" stroke="#404040" stroke-width="5"/>
+          <line x1="470" y1="544" x2="470" y2="704" stroke="#404040" stroke-width="5"/>
+          <line x1="470" y1="704" x2="630" y2="704" stroke="#404040" stroke-width="5"/>
         </svg>
       `;
     }
     
     function generateFrontWallHeatmapSvg(frontWallHits, id) {
-      // Front wall dimensions: 6.4m wide x 4.57m high
-      // ViewBox: 640 x 457 (scaled 100x)
-      // Service line at 1.83m from floor, Tin at 0.43m from floor
-      
-      let gradients = "";
-      let gradientRects = "";
-      
-      if (frontWallHits.length > 0) {
-        // Cluster front wall positions
-        const clusters = clusterFrontWallPositions(frontWallHits);
-        
-        clusters.forEach((cluster, i) => {
-          // Convert wall coords (x: 0-6.4, y: 0-4.57) to viewBox coords
-          // x maps directly, y is inverted (0 at bottom, 4.57 at top)
-          const cx = ((cluster.x / 6.4) * 100).toFixed(0);
-          const cy = (100 - (cluster.y / 4.57) * 100).toFixed(0);
-          const intensity = Math.min(0.9, 0.3 + cluster.weight * 0.35);
-          const radius = 18 + cluster.weight * 15;
-          
-          gradients += `
-            <radialGradient id="${id}-g${i}" cx="${cx}%" cy="${cy}%" r="${radius}%">
-              <stop offset="0%" stop-color="rgba(230, 126, 34, ${intensity})"/>
-              <stop offset="50%" stop-color="rgba(230, 126, 34, ${intensity * 0.4})"/>
-              <stop offset="100%" stop-color="rgba(230, 126, 34, 0)"/>
-            </radialGradient>
-          `;
-          gradientRects += `<rect x="0" y="0" width="640" height="457" fill="url(#${id}-g${i})"/>`;
-        });
-      } else {
-        // Default gradient if no data
-        gradients = `
-          <radialGradient id="${id}-default" cx="50%" cy="50%" r="35%">
-            <stop offset="0%" stop-color="rgba(230, 126, 34, 0.4)"/>
-            <stop offset="100%" stop-color="rgba(230, 126, 34, 0)"/>
-          </radialGradient>
-        `;
-        gradientRects = `<rect x="0" y="0" width="640" height="457" fill="url(#${id}-default)"/>`;
-      }
-      
-      // Service line: 1.83m from floor = 40% from bottom = 60% from top
-      // Tin: 0.43m from floor = 9.4% from bottom = 90.6% from top
-      const serviceLineY = 457 - (1.83 / 4.57 * 457); // ~275
-      const tinLineY = 457 - (0.43 / 4.57 * 457); // ~414
-      
+      // Front wall: 6.4m × 4.57m. ViewBox 640 × 457 (100 px / m).
+      // Render each contact as a discrete marker (not a gradient) so the
+      // user can see exactly where each shot hit. r≈14 viewBox-units ≈ 14cm
+      // of court — large enough to absorb small tracking noise, small
+      // enough that overlapping hits are still distinguishable.
+      const MARKER_R = 14;
+      let markers = "";
+
+      frontWallHits.forEach(hit => {
+        if (hit == null || hit.x == null || hit.y == null) return;
+        const cx = (hit.x / 6.4) * 640;
+        const cy = 457 - (hit.y / 4.57) * 457;  // y inverted: floor at bottom
+        markers += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${MARKER_R}"
+          fill="rgba(230,126,34,0.85)" stroke="#1a1a1a" stroke-width="1.5"/>`;
+      });
+
+      // Service line: 1.78m from floor. Tin: 0.48m from floor.
+      const serviceLineY = 457 - (1.78 / 4.57 * 457); // ~279
+      const tinLineY = 457 - (0.48 / 4.57 * 457); // ~409
+
       return `
         <svg viewBox="0 0 640 457" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-          <defs>${gradients}</defs>
           <rect x="0" y="0" width="640" height="457" fill="#f8f8f8"/>
-          ${gradientRects}
-          
+
           <!-- Front wall outline -->
           <rect x="10" y="10" width="620" height="437" fill="none" stroke="#404040" stroke-width="8"/>
-          
-          <!-- Service line (solid red) -->
+
+          <!-- Service line -->
           <line x1="10" y1="${serviceLineY.toFixed(0)}" x2="630" y2="${serviceLineY.toFixed(0)}" stroke="#e53935" stroke-width="4"/>
-          
-          <!-- Tin line (solid red) -->
+
+          <!-- Tin line -->
           <line x1="10" y1="${tinLineY.toFixed(0)}" x2="630" y2="${tinLineY.toFixed(0)}" stroke="#e53935" stroke-width="6"/>
+
+          ${markers}
         </svg>
       `;
     }
     
     function generateFloorBounceHeatmapSvg(floorBounces, id) {
-      // Same court dimensions as position heatmap: 6.4m x 9.75m
-      // But using orange color for ball
-      
-      let gradients = "";
-      let gradientRects = "";
-      
-      if (floorBounces.length > 0) {
-        const clusters = clusterPositions(floorBounces);
-        
-        clusters.forEach((cluster, i) => {
-          const cx = ((cluster.x / 6.4) * 100).toFixed(0);
-          const cy = ((cluster.y / 9.75) * 100).toFixed(0);
-          const intensity = Math.min(0.9, 0.3 + cluster.weight * 0.35);
-          const radius = 18 + cluster.weight * 15;
-          
-          gradients += `
-            <radialGradient id="${id}-g${i}" cx="${cx}%" cy="${cy}%" r="${radius}%">
-              <stop offset="0%" stop-color="rgba(230, 126, 34, ${intensity})"/>
-              <stop offset="50%" stop-color="rgba(230, 126, 34, ${intensity * 0.4})"/>
-              <stop offset="100%" stop-color="rgba(230, 126, 34, 0)"/>
-            </radialGradient>
-          `;
-          gradientRects += `<rect x="0" y="0" width="640" height="975" fill="url(#${id}-g${i})"/>`;
-        });
-      } else {
-        gradients = `
-          <radialGradient id="${id}-default" cx="50%" cy="70%" r="30%">
-            <stop offset="0%" stop-color="rgba(230, 126, 34, 0.4)"/>
-            <stop offset="100%" stop-color="rgba(230, 126, 34, 0)"/>
-          </radialGradient>
-        `;
-        gradientRects = `<rect x="0" y="0" width="640" height="975" fill="url(#${id}-default)"/>`;
-      }
-      
+      // Floor (top-down): 6.4m × 9.75m. ViewBox 640 × 975 (100 px / m).
+      // Each bounce = one discrete marker. Larger than the front-wall
+      // marker because the court is bigger relative to viewBox.
+      const MARKER_R = 16;
+      let markers = "";
+
+      floorBounces.forEach(b => {
+        if (b == null || b.x == null || b.y == null) return;
+        const cx = (b.x / 6.4) * 640;
+        const cy = (b.y / 9.75) * 975;
+        markers += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${MARKER_R}"
+          fill="rgba(230,126,34,0.85)" stroke="#1a1a1a" stroke-width="1.5"/>`;
+      });
+
       return `
         <svg viewBox="0 0 640 975" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-          <defs>${gradients}</defs>
-          ${gradientRects}
-          
+          <rect x="0" y="0" width="640" height="975" fill="#f8f8f8"/>
+
           <!-- Court outline -->
           <rect x="10" y="10" width="620" height="955" fill="none" stroke="#404040" stroke-width="8"/>
-          
+
           <!-- Short line -->
-          <line x1="10" y1="549" x2="630" y2="549" stroke="#404040" stroke-width="5"/>
-          
+          <line x1="10" y1="544" x2="630" y2="544" stroke="#404040" stroke-width="5"/>
+
           <!-- Half court line -->
-          <line x1="320" y1="549" x2="320" y2="965" stroke="#404040" stroke-width="5"/>
-          
+          <line x1="320" y1="544" x2="320" y2="965" stroke="#404040" stroke-width="5"/>
+
           <!-- Left service box -->
-          <line x1="10" y1="709" x2="170" y2="709" stroke="#404040" stroke-width="5"/>
-          <line x1="170" y1="549" x2="170" y2="709" stroke="#404040" stroke-width="5"/>
-          
+          <line x1="10" y1="704" x2="170" y2="704" stroke="#404040" stroke-width="5"/>
+          <line x1="170" y1="544" x2="170" y2="704" stroke="#404040" stroke-width="5"/>
+
           <!-- Right service box -->
-          <line x1="470" y1="549" x2="470" y2="709" stroke="#404040" stroke-width="5"/>
-          <line x1="470" y1="709" x2="630" y2="709" stroke="#404040" stroke-width="5"/>
+          <line x1="470" y1="544" x2="470" y2="704" stroke="#404040" stroke-width="5"/>
+          <line x1="470" y1="704" x2="630" y2="704" stroke="#404040" stroke-width="5"/>
+
+          ${markers}
         </svg>
       `;
     }
@@ -2492,9 +6126,12 @@ function showResults(msg) {
     }
     
     function clusterPositions(positions) {
-      // Simple clustering - group nearby positions
+      // Simple clustering - group nearby positions.
+      // With dense movement-track input (5 Hz) the grid fills with many
+      // small cells; a 1.0m grid + larger top-N gives a fuller heatmap
+      // without smearing into a single blob.
       const clusters = [];
-      const gridSize = 1.5; // 1.5m grid
+      const gridSize = 1.0;
       const grid = {};
       
       positions.forEach(pos => {
@@ -2520,8 +6157,9 @@ function showResults(msg) {
         });
       });
       
-      // Sort by weight and take top 4
-      return clusters.sort((a, b) => b.weight - a.weight).slice(0, 4);
+      // Top-12 hotspots — enough to render the spatial distribution
+      // from a 5 Hz movement track while keeping SVG cheap.
+      return clusters.sort((a, b) => b.weight - a.weight).slice(0, 12);
     }
     
     // Make loadPointRally available globally for retry buttons
@@ -2529,11 +6167,11 @@ function showResults(msg) {
     
     function goToPoint(idx) {
       pvVideo.currentTime = Math.max(0, points[idx].timestamp_sec - 1);
-      highlightCurrentPoint();
+      highlightCurrentPoint({ scroll: false });
       pvVideo.play();
     }
     
-    function highlightCurrentPoint() {
+    function highlightCurrentPoint(opts) {
       pvList.querySelectorAll(".pv-point-item").forEach((item, i) => {
         const header = item.querySelector(".pv-point-header");
         if (i === currentPointIndex) {
@@ -2542,6 +6180,7 @@ function showResults(msg) {
           header.style.background = "";
         }
       });
+      if (opts && opts.scroll === false) return;
       const activeItem = pvList.querySelector(`.pv-point-item[data-index="${currentPointIndex}"]`);
       if (activeItem) activeItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
@@ -2551,47 +6190,98 @@ function showResults(msg) {
       pvNext.disabled = currentPointIndex === points.length - 1;
     }
     
-    pvVideo.addEventListener("play", () => { pvPlay.innerHTML = "⏸ Pause"; });
-    pvVideo.addEventListener("pause", () => { pvPlay.innerHTML = "▶ Play"; });
+    pvVideo.addEventListener("play", () => { pvPlay.innerHTML = "⏸ Pause"; startDashLoop(); });
+    pvVideo.addEventListener("pause", () => { pvPlay.innerHTML = "▶ Play"; stopDashLoop(); renderDashAll(); });
+    pvVideo.addEventListener("seeking", () => { renderDashAll(); });
     pvVideo.addEventListener("timeupdate", () => {
       for (let i = points.length - 1; i >= 0; i--) {
         if (pvVideo.currentTime >= points[i].timestamp_sec - 1) {
-          if (currentPointIndex !== i) { currentPointIndex = i; highlightCurrentPoint(); }
+          if (currentPointIndex !== i) {
+            currentPointIndex = i;
+            highlightCurrentPoint({ scroll: false });
+            setCurrentPoint(i);
+          }
           break;
         }
       }
       updateButtons();
+      const tCurEl = document.getElementById('dash-time-cur');
+      const tTotEl = document.getElementById('dash-time-total');
+      if (tCurEl) tCurEl.textContent = pvVideo.currentTime.toFixed(1);
+      if (tTotEl && pvVideo.duration) tTotEl.textContent = pvVideo.duration.toFixed(1);
+      // Sync scrubber to playback (only when user isn't dragging it)
+      const scrub = document.getElementById('dash-scrub');
+      if (scrub && !scrub._dragging) scrub.value = pvVideo.currentTime;
+      scheduleDashRender();
     });
-    
+
+    // Slider scrubs within the current point. While dragging we set
+    // pvVideo.currentTime live so the heatmap/trail tracks the thumb.
+    {
+      const scrub = document.getElementById('dash-scrub');
+      if (scrub) {
+        scrub.addEventListener('input', () => {
+          scrub._dragging = true;
+          pvVideo.currentTime = parseFloat(scrub.value);
+          renderDashAll();
+        });
+        scrub.addEventListener('change', () => { scrub._dragging = false; });
+        scrub.addEventListener('pointerdown', () => { scrub._dragging = true; });
+        scrub.addEventListener('pointerup', () => { scrub._dragging = false; });
+      }
+    }
+
     pvPlay.addEventListener("click", () => { if (pvVideo.paused) pvVideo.play(); else pvVideo.pause(); });
-    pvPrev.addEventListener("click", () => { if (currentPointIndex > 0) { currentPointIndex--; goToPoint(currentPointIndex); } });
-    pvNext.addEventListener("click", () => { if (currentPointIndex < points.length - 1) { currentPointIndex++; goToPoint(currentPointIndex); } });
-    
-    let holdingSpace = false;
+    pvPrev.addEventListener("click", () => { if (currentPointIndex > 0) { currentPointIndex--; goToPoint(currentPointIndex); setCurrentPoint(currentPointIndex); } });
+    pvNext.addEventListener("click", () => { if (currentPointIndex < points.length - 1) { currentPointIndex++; goToPoint(currentPointIndex); setCurrentPoint(currentPointIndex); } });
+
+    function isTypingTarget(t) {
+      if (!t) return false;
+      if (t.isContentEditable) return true;
+      if (t.tagName === 'TEXTAREA') return true;
+      if (t.tagName === 'INPUT') {
+        const type = (t.type || 'text').toLowerCase();
+        return !['checkbox', 'radio', 'button', 'submit', 'reset'].includes(type);
+      }
+      return false;
+    }
+
+    // Space: tap = play/pause, hold (>220ms) = 2x speed while held.
+    const HOLD_THRESHOLD_MS = 220;
+    let spaceHoldTimer = null;
+    let spaceMode = null; // null | 'hold'
     document.addEventListener("keydown", (e) => {
       if (!$steps.results.classList.contains("active")) return;
+      if (isTypingTarget(e.target)) return;
       if (e.code === "Space") {
         e.preventDefault();
-        if (!pvVideo.paused && !holdingSpace) {
-          holdingSpace = true;
+        if (e.repeat) return;
+        if (spaceHoldTimer != null || spaceMode === 'hold') return;
+        spaceHoldTimer = setTimeout(() => {
+          spaceMode = 'hold';
+          spaceHoldTimer = null;
+          if (pvVideo.paused) pvVideo.play();
           pvVideo.playbackRate = 2;
-          speedIndicator.classList.add("visible");
-        } else if (pvVideo.paused && !holdingSpace) {
-          pvVideo.play();
-        }
+          if (speedIndicator) speedIndicator.classList.add("visible");
+        }, HOLD_THRESHOLD_MS);
       } else if (e.code === "ArrowLeft") { e.preventDefault(); pvPrev.click(); }
       else if (e.code === "ArrowRight") { e.preventDefault(); pvNext.click(); }
     });
-    
+
     document.addEventListener("keyup", (e) => {
       if (!$steps.results.classList.contains("active")) return;
+      if (isTypingTarget(e.target)) return;
       if (e.code === "Space") {
-        if (holdingSpace) {
+        e.preventDefault();
+        if (spaceMode === 'hold') {
           pvVideo.playbackRate = 1;
-          holdingSpace = false;
-          speedIndicator.classList.remove("visible");
-        } else if (!pvVideo.paused) {
-          pvVideo.pause();
+          if (speedIndicator) speedIndicator.classList.remove("visible");
+          spaceMode = null;
+        } else if (spaceHoldTimer != null) {
+          // Released before hold threshold → tap → toggle play/pause
+          clearTimeout(spaceHoldTimer);
+          spaceHoldTimer = null;
+          if (pvVideo.paused) pvVideo.play(); else pvVideo.pause();
         }
       }
     });
