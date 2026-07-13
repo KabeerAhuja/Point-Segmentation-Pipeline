@@ -4147,25 +4147,54 @@ function extractClientSideFrame(file) {
     video.setAttribute("muted", "");
     video.setAttribute("playsinline", "");
     video.setAttribute("webkit-playsinline", "");
+    // iOS Safari will NOT reliably paint a decoded frame that can be read back
+    // via drawImage unless the <video> is attached to the document and laid out.
+    // Keep it effectively invisible but still "rendered" (not display:none / not
+    // zero-size, both of which stop iOS from compositing frames).
+    video.style.cssText =
+      "position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;" +
+      "pointer-events:none;z-index:-1;";
+    document.body.appendChild(video);
     video.src = url;
 
     let settled = false;
     const cleanup = () => {
       try { video.pause(); } catch (e) {}
+      try { video.removeAttribute("src"); video.load(); } catch (e) {}
+      try { video.remove(); } catch (e) {}
       try { URL.revokeObjectURL(url); } catch (e) {}
     };
     const fail = (msg) => { if (settled) return; settled = true; cleanup(); reject(new Error(msg)); };
+
+    // Mean luma of a downscaled copy — used to detect a black/blank grab so we
+    // never upload one (iOS can still hand back a black frame in edge cases).
+    const meanLuma = (canvas) => {
+      try {
+        const s = document.createElement("canvas");
+        s.width = 24; s.height = 24;
+        const sctx = s.getContext("2d");
+        sctx.drawImage(canvas, 0, 0, 24, 24);
+        const d = sctx.getImageData(0, 0, 24, 24).data;
+        let sum = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          sum += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        }
+        return sum / (d.length / 4);
+      } catch (e) { return 255; /* CORS/read error — assume not black */ }
+    };
 
     const finish = (canvas, fps) => {
       if (settled) return; settled = true;
       const w = canvas.width, h = canvas.height, duration = video.duration || 0;
       const total_frames = Math.max(1, Math.round(duration * fps));
+      const looks_black = meanLuma(canvas) < 10;
       const frame_b64 = canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
       canvas.toBlob((frame_blob) => {
         cleanup();
         resolve({
           frame_b64,
           frame_blob,
+          looks_black,
           src_width: w,
           src_height: h,
           src_fps: Math.round(fps * 100) / 100,
@@ -4235,6 +4264,19 @@ function extractClientSideFrame(file) {
       finish(canvas, 30);
     });
   });
+}
+
+// Ask the backend to extract an authoritative first_frame.png server-side from
+// the uploaded MP4. Fire-and-forget; used when the browser grab is black/missing
+// (iOS Safari). The backend writes first_frame.png + thumbnailPath itself.
+function triggerServerFirstFrame(videoKey, gcsPath) {
+  try {
+    fetch(`${API}/api/extract-first-frame`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ video_key: videoKey, gcs_path: gcsPath || "" }),
+    }).catch((e) => console.warn("server first-frame request failed:", e));
+  } catch (e) { console.warn("server first-frame request failed:", e); }
 }
 
 // XHR PUT to a signed URL with progress events. Returns a Promise plus an abort handle.
@@ -4368,14 +4410,16 @@ async function handleFile(file) {
     progText.textContent = "Upload complete.";
     await updateVideoStatus(videoKey, "ready");
 
-    // Fire-and-forget: write the client-extracted first frame to GCS so the
-    // admin landmark-tagging UI can pick it up without waiting for the GPU.
-    // Also point the video's thumbnailPath at this clean first frame so the
-    // My Videos dashboard shows a thumbnail immediately — even for videos that
-    // never reach Start Tracking. (Start Tracking later overwrites thumbnailPath
-    // with the marked-up frame via uploadThumbnail.)
-    try {
-      if (clientMeta.frame_blob) {
+    // First frame for the admin landmark-tagger + My Videos thumbnail.
+    //
+    // The browser-side grab is unreliable on iOS Safari (it can return a black
+    // frame). So we only upload the client frame when it's actually valid; if
+    // it's black or missing, we ask the backend to extract an authoritative
+    // frame server-side (cv2 on the real MP4 — no iOS rendering constraints),
+    // which overwrites first_frame.png + thumbnailPath a few seconds later.
+    const wantServerFrame = !clientMeta.frame_blob || clientMeta.looks_black;
+    if (!wantServerFrame) {
+      try {
         const firstFramePath = `video-data/${videoKey}/first_frame.png`;
         await uploadBytes(
           ref(fbStorage, firstFramePath),
@@ -4385,8 +4429,14 @@ async function handleFile(file) {
         try {
           await updateDoc(doc(fbFirestore, "videos", videoKey), { thumbnailPath: firstFramePath });
         } catch (e) { console.warn("thumbnailPath set failed:", e); }
+      } catch (err) {
+        console.warn("Client first-frame upload failed, falling back to server:", err);
+        triggerServerFirstFrame(videoKey, firebasePath);
       }
-    } catch (err) { console.warn("First frame upload failed:", err); }
+    } else {
+      console.warn("Client first frame black/missing — using server-side extraction");
+      triggerServerFirstFrame(videoKey, firebasePath);
+    }
   })();
 
   uploadPromise.catch((err) => {
