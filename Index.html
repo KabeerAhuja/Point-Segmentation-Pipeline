@@ -2099,6 +2099,20 @@
     line-height: 1.5;
   }
 
+  .tag-share-players { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .tag-share-player {
+    padding: 14px 16px; border-radius: 12px; cursor: pointer;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); text-align: left;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  }
+  .tag-share-player:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-dim); }
+  .tag-share-player.selected { border-color: var(--accent); background: var(--accent-dim); }
+  .tag-share-player:active:not(:disabled) { transform: scale(0.98); }
+  .tag-share-player:disabled { opacity: 0.55; cursor: wait; }
+  .tag-share-player small { display: block; font-weight: 400; font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+
   .share-add-row {
     display: grid;
     grid-template-columns: 1fr 160px auto;
@@ -2255,6 +2269,12 @@
     font-size: 22px; font-weight: 700; line-height: 1.2;
     color: var(--text); margin-top: 4px;
   }
+  .dash-header-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .dash-share-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; font-size: 14px; border-radius: 999px;
+  }
+  .dash-share-btn svg { margin-top: -1px; }
   .dash-meta { color: var(--text-dim); font-size: 13px; }
   .dash-meta kbd {
     background: var(--bg-elev-2, rgba(255,255,255,0.06));
@@ -2447,6 +2467,7 @@
   .dash-court-line { stroke: rgba(255,255,255,0.25); stroke-width: 1.5; fill: none; }
   .dash-court-bg { fill: rgba(0,240,255,0.02); }
   .dash-tin { fill: rgba(255,46,147,0.15); stroke: rgba(255,46,147,0.4); }
+  .dash-egg { fill: rgba(245,215,90,0.16); stroke: rgba(245,215,90,0.75); stroke-width: 2; }
   .dash-trail-p1 { stroke: var(--blue, #00f0ff); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
   .dash-trail-p2 { stroke: var(--red, #ff2e93); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
   .dash-head-p1 { fill: var(--blue, #00f0ff); filter: drop-shadow(0 0 8px var(--blue, #00f0ff)); }
@@ -2551,6 +2572,32 @@
     <div class="share-section">
       <div class="form-label">People with access</div>
       <div class="share-list" id="share-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tag-a-player invite modal (opened from the results viewer's Share button) -->
+<div id="tag-share-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">Invite a player</h3>
+      <button class="modal-close" id="btn-close-tag-share" aria-label="Close">×</button>
+    </div>
+    <div class="share-section">
+      <div class="form-label">Which player is this for?</div>
+      <div class="tag-share-players">
+        <button type="button" class="tag-share-player" id="tag-share-p1" data-slot="1"></button>
+        <button type="button" class="tag-share-player" id="tag-share-p2" data-slot="2"></button>
+      </div>
+      <div class="share-link-hint">Whoever opens this link signs in with Google, gets tagged as the chosen player, and receives view access to this video.</div>
+      <div id="tag-share-link-wrap" style="display:none; margin-top:16px;">
+        <div class="form-label">Invite link for <span id="tag-share-for" class="modal-title-em"></span></div>
+        <div class="share-link-row">
+          <input type="text" class="form-input" id="tag-share-link-input" readonly>
+          <button class="btn btn-primary" id="btn-tag-share-copy">Copy link</button>
+        </div>
+      </div>
+      <div class="share-msg error" id="tag-share-msg" style="display:none;"></div>
     </div>
   </div>
 </div>
@@ -2747,7 +2794,16 @@
         <div class="step-label">Complete</div>
         <div class="dash-title" id="results-summary"></div>
       </div>
-      <div class="dash-meta">Point <span id="dash-point-cur">–</span> of <span id="dash-point-total">–</span> · <kbd>←</kbd><kbd>→</kbd> nav · <kbd>space</kbd> play</div>
+      <div class="dash-header-right">
+        <button class="btn btn-primary dash-share-btn" id="btn-dash-share" title="Invite a player to tag themselves">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+          Share
+        </button>
+        <div class="dash-meta">Point <span id="dash-point-cur">–</span> of <span id="dash-point-total">–</span> · <kbd>←</kbd><kbd>→</kbd> nav · <kbd>space</kbd> play</div>
+      </div>
     </div>
 
     <div class="dashboard">
@@ -2788,6 +2844,7 @@
             <div class="dash-shot-filter">
               <label><input type="checkbox" class="dash-filter-p1" checked><span class="dash-dot dash-dot-p1"></span><span class="dash-fname-p1">You</span></label>
               <label><input type="checkbox" class="dash-filter-p2" checked><span class="dash-dot dash-dot-p2"></span><span class="dash-fname-p2">Opp</span></label>
+              <label><input type="checkbox" id="dash-filter-egg"><span class="dash-dot" style="background:#f5d75a"></span><span>Egg</span></label>
             </div>
           </div>
           <div id="dash-heatmap-svg" class="dash-svg-host dash-svg-tall"></div>
@@ -3298,6 +3355,9 @@ async function openVideo(key, data) {
   if (data.playerConfig) {
     playerConfig = data.playerConfig;
   }
+  // Only the video owner can mint player-tag invite links from the viewer.
+  const shareBtn = document.getElementById("btn-dash-share");
+  if (shareBtn) shareBtn.style.display = (data.ownerUid === currentUser.uid) ? "inline-flex" : "none";
   try {
     videoBlobUrl = await getDownloadURL(ref(fbStorage, `uploaded-videos/${key}.mp4`));
   } catch (err) {
@@ -3346,9 +3406,15 @@ async function openProcessingPreview(key, data) {
     const d = snap.data();
     const status = d.status || "processing";
     if (status === "complete") {
+      // Tracking is done, but the stats (point_starts.json) are generated a few
+      // minutes AFTER the "complete" write. Don't hand off to openVideo yet — it
+      // would 404 on the stats and alert the viewer, bouncing them off the video.
+      // Keep the raw video playing and poll until the stats are ready, then load
+      // the full results. This lets a shared viewer watch uninterrupted from
+      // "processing" straight through to the finished, tagged result.
       stopProcessingPreview();
-      updateOverallProgress(100, "Complete! Loading results…");
-      openVideo(key, d);
+      updateOverallProgress(100, "Tracking complete — generating stats…");
+      waitForStatsThenOpen(key, d);
       return;
     }
     if (status === "failed") {
@@ -3359,6 +3425,32 @@ async function openProcessingPreview(key, data) {
     const pct = typeof d.progress === "number" ? d.progress : initialPct;
     updateOverallProgress(pct, d.statusMessage || (status === "uploading" ? "Uploading video…" : "Processing video…"));
   }, (err) => console.warn("Processing preview snapshot error:", err));
+}
+
+// Poll for stats readiness after tracking completes, keeping the raw video on
+// screen, then hand off to the full results view. Used by openProcessingPreview
+// so a viewer isn't bounced by a "stats not ready" 404 the instant tracking ends.
+async function waitForStatsThenOpen(key, data, attempt = 0) {
+  const MAX_ATTEMPTS = 60;   // ~5 min at 5s spacing
+  // Only proceed if the viewer is still on the processing screen for THIS video.
+  if (videoKey !== key || !$steps.process.classList.contains("active")) return;
+  try {
+    const ping = await fetch(`${API}/api/points/${key}`, { method: "GET" });
+    if (ping.status !== 404) {
+      // Stats are ready — load the finished, tagged result.
+      updateOverallProgress(100, "Complete! Loading results…");
+      openVideo(key, data);
+      return;
+    }
+  } catch (err) {
+    console.warn("Stats readiness ping failed (will retry):", err);
+  }
+  if (attempt >= MAX_ATTEMPTS) {
+    updateOverallProgress(100, "Tracking complete. Stats are taking longer than usual — reopen this video shortly to see them.");
+    return;
+  }
+  updateOverallProgress(100, "Tracking complete — generating stats…");
+  setTimeout(() => waitForStatsThenOpen(key, data, attempt + 1), 5000);
 }
 
 // ---- Coach management ----
@@ -4037,83 +4129,111 @@ let uploadAbort = null;
 // Extract metadata + first frame from a local File using a hidden <video> element.
 // Returns { frame_b64, frame_blob, src_width, src_height, src_fps, total_frames, duration_sec }.
 // fps is measured via requestVideoFrameCallback when available; otherwise falls back to 30.
+//
+// IMPORTANT (iOS Safari): drawing on the `seeked` event at t=0 grabs a BLACK
+// frame on iPhone/iPad — Safari fires `seeked` before the decoder has painted a
+// real frame into the element. So when requestVideoFrameCallback is available we
+// play the video muted-inline and capture the first *actually painted* frame,
+// which is the only reliable way to get a non-black first frame on iOS.
 function extractClientSideFrame(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const video = document.createElement("video");
     video.preload = "auto";
     video.muted = true;
+    video.defaultMuted = true;
     video.playsInline = true;
+    // iOS honors the attributes (not just the properties) for inline autoplay.
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
     video.src = url;
 
     let settled = false;
-    const cleanup = () => { try { URL.revokeObjectURL(url); } catch (e) {} };
+    const cleanup = () => {
+      try { video.pause(); } catch (e) {}
+      try { URL.revokeObjectURL(url); } catch (e) {}
+    };
     const fail = (msg) => { if (settled) return; settled = true; cleanup(); reject(new Error(msg)); };
-    const ok = (val) => { if (settled) return; settled = true; cleanup(); resolve(val); };
 
-    video.addEventListener("error", () => fail("Could not decode video locally"));
-    video.addEventListener("loadedmetadata", () => {
-      // Seek to t=0 to guarantee a real first frame is available.
-      try { video.currentTime = 0; } catch (e) { /* some browsers throw before metadata */ }
-    });
-    video.addEventListener("seeked", async () => {
-      const w = video.videoWidth, h = video.videoHeight, duration = video.duration || 0;
-      if (!w || !h) { fail("Video has no readable dimensions"); return; }
-      const canvas = document.createElement("canvas");
-      canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, w, h);
-
-      // Measure fps using requestVideoFrameCallback (sample ~8 frames). Falls back to 30.
-      let fps = 30;
-      if (typeof video.requestVideoFrameCallback === "function") {
-        try {
-          fps = await measureFpsViaCallback(video);
-        } catch (e) { /* keep 30 */ }
-      }
-
+    const finish = (canvas, fps) => {
+      if (settled) return; settled = true;
+      const w = canvas.width, h = canvas.height, duration = video.duration || 0;
       const total_frames = Math.max(1, Math.round(duration * fps));
       const frame_b64 = canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
-      const frame_blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.85));
-
-      ok({
-        frame_b64,
-        frame_blob,
-        src_width: w,
-        src_height: h,
-        src_fps: Math.round(fps * 100) / 100,
-        total_frames,
-        duration_sec: Math.round(duration * 100) / 100,
-      });
-    });
-  });
-}
-
-function measureFpsViaCallback(video) {
-  return new Promise((resolve) => {
-    const samples = [];
-    let lastMediaTime = null;
-    const playPromise = video.play().catch(() => {});
-    const tick = (_now, metadata) => {
-      const t = metadata.mediaTime;
-      if (lastMediaTime !== null) {
-        const dt = t - lastMediaTime;
-        if (dt > 0 && dt < 0.5) samples.push(dt);
-      }
-      lastMediaTime = t;
-      if (samples.length < 8) {
-        video.requestVideoFrameCallback(tick);
-      } else {
-        try { video.pause(); video.currentTime = 0; } catch (e) {}
-        // Median interval for robustness to outliers.
-        samples.sort((a, b) => a - b);
-        const med = samples[Math.floor(samples.length / 2)];
-        resolve(med > 0 ? 1 / med : 30);
-      }
+      canvas.toBlob((frame_blob) => {
+        cleanup();
+        resolve({
+          frame_b64,
+          frame_blob,
+          src_width: w,
+          src_height: h,
+          src_fps: Math.round(fps * 100) / 100,
+          total_frames,
+          duration_sec: Math.round(duration * 100) / 100,
+        });
+      }, "image/jpeg", 0.85);
     };
-    Promise.resolve(playPromise).then(() => video.requestVideoFrameCallback(tick));
-    // Hard timeout in case the browser stalls.
-    setTimeout(() => resolve(30), 4000);
+
+    const grab = () => {
+      const w = video.videoWidth, h = video.videoHeight;
+      if (!w || !h) return null;
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(video, 0, 0, w, h);
+      return canvas;
+    };
+
+    video.addEventListener("error", () => fail("Could not decode video locally"));
+
+    // Preferred path (incl. iOS): capture the first painted frame + measure fps
+    // in a single requestVideoFrameCallback loop.
+    if (typeof video.requestVideoFrameCallback === "function") {
+      let frameCanvas = null;
+      const samples = [];
+      let lastMediaTime = null;
+      const tick = (_now, metadata) => {
+        if (settled) return;
+        // The first callback guarantees a real frame has been rendered.
+        if (!frameCanvas) {
+          frameCanvas = grab();
+          if (!frameCanvas) { fail("Video has no readable dimensions"); return; }
+        }
+        const t = metadata.mediaTime;
+        if (lastMediaTime !== null) {
+          const dt = t - lastMediaTime;
+          if (dt > 0 && dt < 0.5) samples.push(dt);
+        }
+        lastMediaTime = t;
+        if (samples.length < 8) {
+          video.requestVideoFrameCallback(tick);
+        } else {
+          samples.sort((a, b) => a - b);
+          const med = samples[Math.floor(samples.length / 2)];
+          finish(frameCanvas, med > 0 ? 1 / med : 30);
+        }
+      };
+      video.addEventListener("loadedmetadata", () => {
+        video.play().catch(() => {});
+        video.requestVideoFrameCallback(tick);
+      });
+      // If we got a frame but fps sampling stalled, finish with the frame @ 30fps.
+      setTimeout(() => { if (!settled && frameCanvas) finish(frameCanvas, 30); }, 4000);
+      // If nothing painted at all, bail so the caller can surface an error.
+      setTimeout(() => { if (!settled) fail("Timed out reading video"); }, 9000);
+      return;
+    }
+
+    // Fallback (no requestVideoFrameCallback): seek slightly past 0 and draw on
+    // `seeked`. The small offset dodges the black-frame-at-exactly-0 case.
+    video.addEventListener("loadedmetadata", () => {
+      try { video.currentTime = 0.05; } catch (e) { /* some browsers throw pre-metadata */ }
+    });
+    video.addEventListener("seeked", () => {
+      const canvas = grab();
+      if (!canvas) { fail("Video has no readable dimensions"); return; }
+      finish(canvas, 30);
+    });
   });
 }
 
@@ -4460,22 +4580,29 @@ function wirePicker(n) {
 wirePicker(1);
 wirePicker(2);
 
+// Mint an invite token bound to a player slot on the given video and return the
+// shareable URL. Shared by the config-step picker and the results-viewer Share
+// button. Uses `videoKey` (the currently open video) unless a key is passed.
+async function mintPlayerInvite(slot, forVideoKey = videoKey) {
+  if (!forVideoKey || !currentUser) throw new Error("Not ready to create an invite.");
+  const token = crypto.randomUUID().replace(/-/g, "");
+  await setDoc(doc(fbFirestore, "invites", token), {
+    videoKey: forVideoKey,
+    playerSlot: slot,
+    createdBy: currentUser.uid,
+    createdAt: serverTimestamp(),
+    claimedBy: null,
+  });
+  return `${window.location.origin}/?invite=${encodeURIComponent(token)}`;
+}
+
 async function createInviteForPlayer(n) {
   if (!videoKey || !currentUser) return;
   const s = pickerSlot(n);
   s.inviteBtn.disabled = true;
   s.inviteBtn.textContent = "Creating link...";
   try {
-    const token = crypto.randomUUID().replace(/-/g, "");
-    await setDoc(doc(fbFirestore, "invites", token), {
-      videoKey,
-      playerSlot: n,
-      createdBy: currentUser.uid,
-      createdAt: serverTimestamp(),
-      claimedBy: null,
-    });
-    const url = `${window.location.origin}/?invite=${encodeURIComponent(token)}`;
-    s.inviteInput.value = url;
+    s.inviteInput.value = await mintPlayerInvite(n);
     s.invitePanel.style.display = "flex";
     s.inviteBtn.textContent = "Send invite link";
   } catch (err) {
@@ -4486,6 +4613,70 @@ async function createInviteForPlayer(n) {
     s.inviteBtn.disabled = false;
   }
 }
+
+// ---- Results-viewer "Share" button: tag a player + mint an invite link ----
+const tagShareModal = document.getElementById("tag-share-modal");
+function playerLabel(slot) {
+  const cfg = slot === 1 ? playerConfig.player_1 : playerConfig.player_2;
+  return (cfg && cfg.name && cfg.name.trim()) ? cfg.name.trim() : `Player ${slot}`;
+}
+function openTagShareModal() {
+  if (!videoKey || !currentUser) return;
+  // Reset UI each open.
+  document.getElementById("tag-share-link-wrap").style.display = "none";
+  document.getElementById("tag-share-link-input").value = "";
+  const msg = document.getElementById("tag-share-msg");
+  msg.style.display = "none"; msg.textContent = "";
+  [1, 2].forEach((slot) => {
+    const btn = document.getElementById(`tag-share-p${slot}`);
+    btn.disabled = false;
+    btn.classList.remove("selected");
+    btn.innerHTML = `${playerLabel(slot)}<small>Tag as Player ${slot}</small>`;
+  });
+  tagShareModal.style.display = "flex";
+}
+function closeTagShareModal() { tagShareModal.style.display = "none"; }
+
+async function createTagShareLink(slot) {
+  const btn = document.getElementById(`tag-share-p${slot}`);
+  const other = document.getElementById(`tag-share-p${slot === 1 ? 2 : 1}`);
+  const msg = document.getElementById("tag-share-msg");
+  msg.style.display = "none";
+  btn.disabled = true; other.disabled = true;
+  btn.classList.add("selected"); other.classList.remove("selected");
+  const prev = btn.innerHTML;
+  btn.innerHTML = `Creating link…`;
+  try {
+    const url = await mintPlayerInvite(slot);
+    document.getElementById("tag-share-for").textContent = playerLabel(slot);
+    document.getElementById("tag-share-link-input").value = url;
+    document.getElementById("tag-share-link-wrap").style.display = "block";
+  } catch (err) {
+    console.error("createTagShareLink failed:", err);
+    msg.textContent = `Could not create invite: ${err.code || err.message}`;
+    msg.style.display = "block";
+  } finally {
+    btn.innerHTML = prev;
+    btn.disabled = false; other.disabled = false;
+  }
+}
+
+document.getElementById("btn-dash-share").addEventListener("click", openTagShareModal);
+document.getElementById("btn-close-tag-share").addEventListener("click", closeTagShareModal);
+tagShareModal.addEventListener("click", (e) => { if (e.target === tagShareModal) closeTagShareModal(); });
+document.getElementById("tag-share-p1").addEventListener("click", () => createTagShareLink(1));
+document.getElementById("tag-share-p2").addEventListener("click", () => createTagShareLink(2));
+document.getElementById("btn-tag-share-copy").addEventListener("click", async () => {
+  const input = document.getElementById("tag-share-link-input");
+  const btn = document.getElementById("btn-tag-share-copy");
+  try {
+    await navigator.clipboard.writeText(input.value);
+    btn.textContent = "Copied!";
+    setTimeout(() => (btn.textContent = "Copy link"), 1500);
+  } catch (e) {
+    input.select(); input.setSelectionRange(0, input.value.length);
+  }
+});
 
 function showConfigUploadStatus(text, kind) {
   const banner = document.getElementById("config-upload-status");
@@ -4761,6 +4952,7 @@ function showResults(msg) {
 
     const dashState = {
       filter: { p1: true, p2: true },
+      showEgg: false,
       scope: 'match',
       currentPointNum: null,   // 1-based, set when a point becomes "current"
       currentPointData: null,  // cached rally for current point (null until loaded)
@@ -4816,6 +5008,20 @@ function showResults(msg) {
     const wX = m => (m / 6.4) * 640;
     const wY = m => 457 - (m / 4.57) * 457; // floor at bottom
 
+    // Singles "egg" zone. Ellipse whose half-width grows linearly from 1.55m (front tip,
+    // 3.10m from front wall) to 1.77m (back, 7.77m), centered on the 3.2m half-court line.
+    // Fit: (x/(1.661+0.0481u))^2 + (u/2.333)^2 = 1, u = y - 5.428, x from centerline (meters).
+    function eggPathSvg() {
+      const uMax = 2.333, cy0 = 5.428, halfCourt = 3.2, N = 64;
+      const half = u => 1.661 + 0.0481 * u;
+      const dx = u => half(u) * Math.sqrt(Math.max(0, 1 - (u / uMax) ** 2));
+      const pts = [];
+      for (let i = 0; i <= N; i++) { const u = -uMax + (2 * uMax) * (i / N); pts.push([cX(halfCourt + dx(u)), cY(cy0 + u)]); }
+      for (let i = N; i >= 0; i--) { const u = -uMax + (2 * uMax) * (i / N); pts.push([cX(halfCourt - dx(u)), cY(cy0 + u)]); }
+      const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ') + ' Z';
+      return `<path class="dash-egg" d="${d}"/>`;
+    }
+
     function courtShellSvg(innerHtml) {
       return `
         <svg viewBox="0 0 640 975" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
@@ -4849,7 +5055,7 @@ function showResults(msg) {
       if (!host) return;
       const pt = dashState.currentPointData;
       const tInPoint = Math.max(0, pvVideo.currentTime - (dashState.currentPointStart || 0));
-      if (!pt) { host.innerHTML = courtShellSvg(''); return; }
+      if (!pt) { host.innerHTML = courtShellSvg(dashState.showEgg ? eggPathSvg() : ''); return; }
 
       const SAMPLE_HZ = 5;
       const HEAT_STRIDE = 2;
@@ -4908,7 +5114,8 @@ function showResults(msg) {
                 <circle class="${headCls}" cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="12"/>`;
       }
 
-      const inner = blobsFor('player_1', 'dash-heat-p1')
+      const inner = (dashState.showEgg ? eggPathSvg() : '')
+                  + blobsFor('player_1', 'dash-heat-p1')
                   + blobsFor('player_2', 'dash-heat-p2')
                   + trailFor('player_1', 'dash-trail-p1', 'dash-head-p1')
                   + trailFor('player_2', 'dash-trail-p2', 'dash-head-p2');
@@ -5179,6 +5386,8 @@ function showResults(msg) {
       };
       document.querySelectorAll('.dash-filter-p1').forEach(cb => cb.addEventListener('change', e => sync('p1', e.target.checked)));
       document.querySelectorAll('.dash-filter-p2').forEach(cb => cb.addEventListener('change', e => sync('p2', e.target.checked)));
+      const eggCb = document.getElementById('dash-filter-egg');
+      if (eggCb) eggCb.addEventListener('change', e => { dashState.showEgg = e.target.checked; renderDashHeatmap(); });
     }
     function setupDashStatsToggle() {
       document.querySelectorAll('#dash-stats-toggle button').forEach(b => {
