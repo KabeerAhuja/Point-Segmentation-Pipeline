@@ -960,6 +960,11 @@ def verify_token(authorization_header: str) -> dict:
 
 _ACTIVE_SUB_STATUSES = {"active", "trialing"}
 
+# Free uploads granted to every account from creation. On the (FREE_UPLOAD_LIMIT+1)-th
+# upload a non-subscriber is blocked and prompted to subscribe. The counter is monotonic
+# (see check_and_consume_upload_quota) so deleting a video never refunds a free slot.
+FREE_UPLOAD_LIMIT = 3
+
 
 def get_user_billing(uid: str) -> dict:
     """Read the billing fields from users/{uid}. Returns a dict with at least
@@ -1004,6 +1009,50 @@ def set_user_billing(uid: str, fields: dict):
 def has_active_subscription(billing: dict) -> bool:
     """True if the given billing dict represents an access-granting subscription."""
     return (billing or {}).get("subscriptionStatus") in _ACTIVE_SUB_STATUSES
+
+
+def check_and_consume_upload_quota(uid: str, billing: dict) -> tuple:
+    """Meter one upload for a signed-in, non-anonymous user and decide if it's allowed.
+
+    Returns (subscribed: bool, remaining: int | None):
+      • Active subscribers → unlimited: increment the counter (informational only) and
+        return (True, None), never blocking.
+      • Free users → allowed while `videosUploaded` < FREE_UPLOAD_LIMIT. On success the
+        counter is incremented and (False, remaining_after) is returned so the client can
+        show "N free videos left". When the free tier is exhausted, raise
+        402 subscription_required WITHOUT incrementing.
+
+    `videosUploaded` on users/{uid} is monotonic — never decremented — so deleting a
+    video never refunds a free slot. The read-check-increment runs in a Firestore
+    transaction so concurrent create-job calls can't slip past the limit.
+    """
+    subscribed = has_active_subscription(billing)
+    if not uid:
+        # No account to meter against: subscribers pass, everyone else is blocked.
+        if subscribed:
+            return True, None
+        raise HTTPException(status_code=402, detail="subscription_required")
+
+    app = _init_firebase_admin()
+    from firebase_admin import firestore as fb_firestore
+    db = fb_firestore.client(app, database_id="default")
+    user_ref = db.collection("users").document(uid)
+
+    @fb_firestore.transactional
+    def _consume(transaction) -> int:
+        snap = user_ref.get(transaction=transaction)
+        data = snap.to_dict() if snap.exists else {}
+        used = int(data.get("videosUploaded") or 0)
+        if not subscribed and used >= FREE_UPLOAD_LIMIT:
+            # Free tier exhausted — abort the transaction without incrementing.
+            raise HTTPException(status_code=402, detail="subscription_required")
+        transaction.set(user_ref, {"videosUploaded": used + 1}, merge=True)
+        return used + 1
+
+    used_after = _consume(db.transaction())
+    if subscribed:
+        return True, None
+    return False, max(0, FREE_UPLOAD_LIMIT - used_after)
 
 
 def find_uid_by_stripe_customer(customer_id: str):
@@ -7723,15 +7772,31 @@ def web():
 
     @api.post("/api/create-job")
     async def create_job(request: Request, body: dict = None):
-        # Paywall: uploading/analyzing a video requires an active subscription.
-        require_subscription(request)
+        # Free-tier gate: every account gets FREE_UPLOAD_LIMIT *uploaded videos* from
+        # creation, then must subscribe. Only the source upload counts — the client sends
+        # `is_new_upload: true` on that one call; the per-game processing jobs it spawns for
+        # the same upload reuse the same source and must NOT consume another slot.
+        # Subscribers are unlimited; anonymous trial-funnel users are exempt (client-capped).
+        claims = require_user(request)
         body = body or {}
+        subscribed, remaining = True, None
+        is_new_upload = bool(body.get("is_new_upload"))
+        if is_new_upload and (claims.get("firebase") or {}).get("sign_in_provider") != "anonymous":
+            billing = get_user_billing(claims.get("uid"))
+            # Raises 402 subscription_required on the (FREE_UPLOAD_LIMIT+1)-th upload;
+            # otherwise atomically consumes one free slot.
+            subscribed, remaining = check_and_consume_upload_quota(claims.get("uid"), billing)
         job_id = str(uuid.uuid4())[:8]
         # Accept client-provided video_key (new auth flow generates it client-side so
         # the Firestore record can be created before upload). Fall back to server-side
         # generation for any caller that doesn't supply one.
         video_key = body.get("video_key") or make_video_key(body.get("filename", "video.mp4"))
-        return JSONResponse({"job_id": job_id, "video_key": video_key})
+        return JSONResponse({
+            "job_id": job_id,
+            "video_key": video_key,
+            "subscribed": subscribed,
+            "free_uploads_remaining": remaining,
+        })
 
     @api.post("/api/extract-first-frame")
     async def extract_first_frame_endpoint(body: dict = None):
@@ -7900,8 +7965,10 @@ def web():
         This avoids Modal's HTTP request idle timeout on long videos where the
         GCS download + ffprobe per-frame PTS extraction can exceed ~150s.
         """
-        # Paywall: kicking off processing requires an active subscription.
-        require_subscription(request)
+        # Auth only: the free-tier quota was already checked and consumed at /api/create-job
+        # for this job_id. Re-checking here would double-count / falsely 402 the last free
+        # upload, so we just require a signed-in caller.
+        require_user(request)
         job_id = body["job_id"]
         gcs_path = body["gcs_path"]
         video_key = body.get("video_key", "")

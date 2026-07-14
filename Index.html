@@ -2602,6 +2602,23 @@
   </div>
 </div>
 
+<!-- Free-upload limit / subscribe prompt -->
+<div id="upload-limit-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title" id="upload-limit-title">Free uploads</h3>
+      <button class="modal-close" id="btn-close-upload-limit" aria-label="Close">×</button>
+    </div>
+    <div class="share-section">
+      <p id="upload-limit-msg" style="margin:0 0 18px; line-height:1.5;"></p>
+      <div class="share-link-row" style="justify-content:flex-end;">
+        <button class="btn btn-secondary" id="btn-upload-limit-dismiss">Continue</button>
+        <button class="btn btn-primary" id="btn-upload-limit-subscribe">Subscribe now</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Login overlay (shown when not signed in) -->
 <div id="login-overlay" class="login-overlay">
   <div class="login-card">
@@ -2937,6 +2954,44 @@ async function ensureUserDoc(user) {
     console.error("[DEBUG] ensureUserDoc FAILED:", err.code, err.message, err);
   }
 }
+
+// ---- Free-upload limit / subscribe prompt ----------------------------------
+// Shown after /api/create-job: a soft nudge with the remaining free count on
+// uploads 1..N, and a hard block on the (N+1)-th upload for non-subscribers.
+function showUploadLimitModal({ blocked, remaining }) {
+  const modal = document.getElementById("upload-limit-modal");
+  const title = document.getElementById("upload-limit-title");
+  const msg = document.getElementById("upload-limit-msg");
+  const dismiss = document.getElementById("btn-upload-limit-dismiss");
+  const closeX = document.getElementById("btn-close-upload-limit");
+  if (blocked) {
+    title.textContent = "You've used your free videos";
+    msg.innerHTML = "You've used all your free video uploads. Subscribe to upload unlimited matches and games.";
+    // No skipping past a hard block — hide the dismiss/close affordances.
+    dismiss.style.display = "none";
+    closeX.style.display = "none";
+  } else {
+    const n = Math.max(0, remaining | 0);
+    title.textContent = "Upload started";
+    msg.innerHTML = `You have <strong>${n}</strong> free video${n === 1 ? "" : "s"} left. Subscribe now for unlimited uploads.`;
+    dismiss.style.display = "";
+    closeX.style.display = "";
+  }
+  modal.style.display = "flex";
+}
+function hideUploadLimitModal() {
+  document.getElementById("upload-limit-modal").style.display = "none";
+}
+// Kick off subscription checkout. The Stripe Payment Element UI lives in the main
+// (boast-iq-app) frontend and calls POST /api/create-subscription; wire it here.
+function startSubscribeFlow() {
+  hideUploadLimitModal();
+  if (typeof window.openSubscribeFlow === "function") { window.openSubscribeFlow(); return; }
+  alert("Subscription checkout opens in the main app.");
+}
+document.getElementById("btn-upload-limit-dismiss")?.addEventListener("click", hideUploadLimitModal);
+document.getElementById("btn-close-upload-limit")?.addEventListener("click", hideUploadLimitModal);
+document.getElementById("btn-upload-limit-subscribe")?.addEventListener("click", startSubscribeFlow);
 
 async function createVideoDoc(videoKey, file) {
   console.log("[DEBUG] createVideoDoc called for key:", videoKey);
@@ -4356,14 +4411,27 @@ async function handleFile(file) {
   firebasePath = `uploaded-videos/${videoKey}.mp4`;
   uploadAbort = null;
   uploadPromise = (async () => {
-    // Backend job_id assignment.
+    // Backend job_id assignment. Send the Firebase ID token so the backend can meter
+    // this account's free-upload quota (3 free videos, then subscribe).
     const jobResp = await fetch(`${API}/api/create-job`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${await currentUser.getIdToken()}`,
+      },
       body: JSON.stringify({ filename: file.name, video_key: videoKey }),
     });
+    if (jobResp.status === 402) {
+      // Free tier exhausted — block this upload and prompt to subscribe.
+      showUploadLimitModal({ blocked: true });
+      throw new Error("subscription_required");
+    }
     const jobData = await jobResp.json();
     jobId = jobData.job_id;
+    // Soft nudge for non-subscribers: show how many free uploads remain.
+    if (jobData.subscribed === false && typeof jobData.free_uploads_remaining === "number") {
+      showUploadLimitModal({ blocked: false, remaining: jobData.free_uploads_remaining });
+    }
 
     // Signed PUT URL for direct GCS upload (faster than uploadBytesResumable for typical files).
     const urlResp = await fetch(`${API}/api/get-upload-url`, {
